@@ -1,18 +1,16 @@
 import random
 import telebot
 from lairwayLS import keep_alive
-import sqlite3
 import os
-
-conn = sqlite3.connect('LW.db', check_same_thread=False)
-cur = conn.cursor()
-cur.execute('''CREATE TABLE IF NOT EXISTS box (id, box, key, skey, mod )''')
-cur.execute('''CREATE TABLE IF NOT EXISTS UsInf (id, name, rname, role, Blockid, fotoid )''')
+import sqlite3
+from github import Github
 
 text = {}
 bttn = {}
 img = {}
 maps={}
+spell={}
+spl=[]
 
 phrase = [
     "Приветвуем вас в игре сделаной на основе ТБ-двжика Lairway. Что бы начать нажмите на /start",
@@ -22,9 +20,31 @@ phrase = [
 starter = ["1"]
 Size=[None,None,None]
 
+token =  os.environ['token']
+bot = telebot.TeleBot(token) 
+
+conn = sqlite3.connect('LW.db', check_same_thread=False)
+cur = conn.cursor()
+cur.execute('''CREATE TABLE IF NOT EXISTS box (id, box, key, skey, mod )''')
+cur.execute('''CREATE TABLE IF NOT EXISTS UsInf (id, name, rname, role, Blockid, fotoid )''')
+
+
+def GitHub(uid):
+  try:
+    g = Github(os.environ['GitHub'])
+    repo = g.get_repo(os.environ['path'])
+    with open("LW.db", "rb") as file:
+        content = file.read()
+    old_file = repo.get_contents("LW.db")
+    repo.update_file(old_file.path, "commit message", content, old_file.sha)
+    g.close()
+    return True
+  except:
+    bot.send_message(uid, "GTSAVE невозможен. Возможно вы не указали токен GitHub (GitHub) и путь к вашему репл (name) в формате 'имя/репл', или же не создали LW.db в гитхабе")
+    return False
+
 
 def gasanbek(f, message, tp=0, new = 1):
-
   if not f in text:
     bot.send_message(message.from_user.id, "Error:\nТекста "+str(f)+" не существует.")
     return "No_TX"
@@ -118,16 +138,21 @@ def gasanbek(f, message, tp=0, new = 1):
           else:
             for k in range(0,len(way[2:])-1,2):
               key(way[k+3],way[k+4],uid)
-          start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
-          keyboard1.add(start_button2)
+          if way[1]!="":
+            start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
+            keyboard1.add(start_button2)
+
         #Тип кнопки c. Позволяет отчищать
         elif way[2] == "c":
           if len(way) == 3:
             clear(uid)
           else:
             clear(uid, list=way[3:])
-          start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
-          keyboard1.add(start_button2)
+
+          if way[1]!="":
+            start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
+            keyboard1.add(start_button2)
+
         #Тип кнопки r. Позволяет придавать значениям переменных рандомное значение
         elif way[2] == "r":  
             if way[1]=="@":
@@ -156,12 +181,10 @@ def gasanbek(f, message, tp=0, new = 1):
         elif way[2] == "d":
           if len(way) == 5:
             if door(uid, way[3]):
-              start_button2 = telebot.types.InlineKeyboardButton(
-                  text=way[0], callback_data=way[4])
+              start_button2 = telebot.types.InlineKeyboardButton(text=way[0], callback_data=way[4])
               keyboard1.add(start_button2)
             else:
-              start_button2 = telebot.types.InlineKeyboardButton(
-                  text=way[0], callback_data=way[1])
+              start_button2 = telebot.types.InlineKeyboardButton(text=way[0], callback_data=way[1])
               keyboard1.add(start_button2)
 
           else:
@@ -251,9 +274,10 @@ def gasanbek(f, message, tp=0, new = 1):
           VIP=False
           who=cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
           if who=="lord": VIP=True
-          elif (way[3]=="herceg" or way[3]=="h") and who=="herceg": VIP==True
-          elif (way[3]=="wanderer" or way[3]=="w") and (who=="wanderer" or who=="herceg"): VIP=True
-          elif way[3]=="name":
+          elif (way[3] in ("high","h")) and who=="herceg": VIP==True
+          elif (way[3] in ("w","way","wanderer","low")) and (who=="wanderer" or who=="herceg"): 
+            VIP=True
+          elif way[3] in ("name","names","n"):
             if cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(id,)).fetchall()[0][0] in way[3:]:
               VIP=True
           if VIP:
@@ -275,8 +299,9 @@ def gasanbek(f, message, tp=0, new = 1):
       forblockid-=len(cur.execute("SELECT fotoid FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0].split("@")) - 3
     cur.execute("UPDATE UsInf SET Blockid = ? WHERE (id) = (?)",(forblockid,uid,))
     conn.commit()
-
-    bot.send_message(message.from_user.id, "Создано при использововании LairWay. Удачной игры! \n\n"+RLW(text[f][0], uid), reply_markup=keyboard1)
+    sphr=""
+    if f==starter[0]: sphr= "Создано при использововании LairWay. Удачной игры! \n\n"
+    bot.send_message(message.from_user.id, sphr+RLW(text[f][0], uid), reply_markup=keyboard1)
   else:
       bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id, text=RLW(text[f][0],uid), reply_markup=keyboard1)
 
@@ -315,12 +340,15 @@ def RLW(text,uid):
         except: return "ERROR: Ошибка синтаксиса door внутри '@?'"
       elif k=="name":
         part+=str(cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0])
+      elif k=="rname":
+        part+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0])
       elif k=="fname":
         part+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]).split()[0]
       elif k=="sname":
         part+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]).split()[1]
-      elif k=="rname":
-        part+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0])
+      elif k=="role":
+        part+=str(cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0])
+
       elif k in ("S1","s1"): 
          part+="~"
       elif k in ("S2","s2"):
@@ -501,10 +529,6 @@ def say(ad):
   for citizen in cur.execute("SELECT DISTINCT id FROM UsInf").fetchall():
     bot.send_message(citizen[0],ad.replace("|", "\n"))
 
-
-token =  '5094636386:AAEmffF2FhQjeJmp3fSBMgUsh1_PyaYqJ_8'
-bot = telebot.TeleBot(token) 
-
 #Функция LairwayRead, которая читает файл игры и делит ее сначало построчно а затем делит ее на элементы по этому символу ~. В последующих строках мы спрашиваем его, чем является первый элемент этой строки. Если это tx, то мы превращаем последующие элементы строки в список и добавляем в словарь text, где ключом является номер текста, а значением все последующие значения текста. Аналогично для "bt" и "img"
 def LairWayRead():
   cur.execute("UPDATE UsInf SET role = 'commoner' ")
@@ -513,7 +537,6 @@ def LairWayRead():
       first=cnt.readlines()
       for f in first[0].strip().split():
         LWR(f+".lairway")
-
   else:
     LWR("Game.lairway")
 
@@ -537,6 +560,10 @@ def LWR(game):
             bttn[gg[1]] = [gg[2],gg[1]]
             for i in range(3, len(gg)):
               bttn[gg[1]].append(gg[i])
+          elif gg[0] == "key":
+            bttn[gg[1]] = ["None","","k"]
+            for i in range(2, len(gg)):
+              bttn[gg[1]].append(gg[i])
           elif gg[0]=="qk":
             text[gg[1]] = [gg[2]]
             for i in range(4, len(gg),2):
@@ -552,6 +579,11 @@ def LWR(game):
             maps[gg[1]] = []
             for i in range(2, len(gg)):
               maps[gg[1]].append(gg[i])
+          elif gg[0] in ("spell","spl"):
+            spell[gg[1]] = []
+            spl.append(gg[1])
+            for i in range(2, len(gg)):
+              spell[gg[1]].append(gg[i])
           elif gg[0] == "ph":
             starter[0] = gg[1]
             phrase[0] = gg[2]
@@ -565,7 +597,7 @@ def LWR(game):
               else:
                 cur.execute("UPDATE UsInf SET role = 'wanderer' WHERE (name) = (?)",(lord,))
   except Exception as err:
-      print(f"ERROR!:\n.Чтение файла %s.lairway - Ошибка.\n",game,err)
+      print(f"ERROR!:\n.Чтение файла {game}.lairway - \n Ошибка {err}")
 
 
 
@@ -597,7 +629,7 @@ def самостоятельный(call):
 @bot.message_handler(commands=['lairway'])
 def TextCommand(message):
   IfInBox(message.from_user.id, message)
-  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - RenderVersion Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
+  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - Rebirth(0.13)[Render&GitHub] Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
 
 
 #Считывает файл сюжета игры
@@ -679,8 +711,8 @@ def LWreadCommand(message):
 def LWsaveCommand(message):
   tprole=("lord")
   if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
-    with open("LW.db","rb") as file:
-      bot.send_document(message.chat.id,file,"LW.db")
+    if GitHub(message.from_user.id):
+      bot.send_message(message.from_user.id, "SQL сохранен!")
   else:
      bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
@@ -698,6 +730,7 @@ def TpCommand(message):
   else:
     bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
+
 @bot.message_handler(commands=['key','Key'],)
 def perem(message):
   tprole=("lord","herceg")
@@ -710,17 +743,60 @@ def perem(message):
   else:
      bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
+@bot.message_handler(commands=['send','Send'])
+def LWtestCommand(message):
+  tprole=("lord")
+  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+    try:
+      name=message.text.split()[1]
+      with open(name,"rb") as file:
+        bot.send_document(message.chat.id,file,"name")
+    except:
+      bot.send_message(message.from_user.id, "Вы забыли указать название файла, фаил не найден или произошла другая ошибка.")
+  else:
+     bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
+
  #другом случае:
+@bot.message_handler(commands=spl)
+def Spell(message):
+  uid = message.from_user.id
+  command=message.text.split()[0][1:]
+  splway=spell[command]
+  if len(splway)==1:
+    Lairway(splway[0], message)
+  elif len(splway)==2:
+    VIP=False
+    who=cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
+    if who=="lord": VIP=True
+    elif (splway[1] in ("high","h")) and who=="herceg": VIP=True
+    elif splway[1] in ("w","way","wanderer","low") and (who=="wanderer" or who=="herceg"):
+        VIP=True
+    if VIP: 
+      Lairway(splway[0], message)
+    else: 
+      bot.send_message(uid, "У вас не хватает прав для использования этой команды!")
+  elif len(splway)>2:
+    if door(uid,splway[1],splway[2]):
+      Lairway(splway[0], message)
+    else:
+      if len(splway)>3:
+        bot.send_message(uid, RLW(splway[3],uid))
+      else:
+        bot.send_message(uid, RLW(phrase[0],uid))
+
+
 
 
 @bot.message_handler(content_types=['text'])
 def TextCommand(message):
-  bot.send_message(message.from_user.id, phrase[0])
+  bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
 
 
 @bot.message_handler(content_types=['sticker'])
 def stickCommand(message):
-  bot.send_message(message.from_user.id, phrase[0])
+  bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
+
+
 
 keep_alive()
 bot.polling(none_stop=True, timeout=123)
