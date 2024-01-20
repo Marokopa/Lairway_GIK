@@ -1,9 +1,9 @@
 import random
 import telebot
-from lairwayLS import keep_alive
+from LairEye import LWLS, GHS
 import os
 import sqlite3
-from github import Github
+
 
 text = {}
 bttn = {}
@@ -17,7 +17,7 @@ phrase = [
     "Cистема защиты от багов и глюков LairWayDefence была активирована"
 ]
 
-starter = ["1"]
+starter = ["1",None]
 Size=[None,None,None]
 
 token =  os.environ['token']
@@ -29,19 +29,6 @@ cur.execute('''CREATE TABLE IF NOT EXISTS box (id, box, key, skey, mod )''')
 cur.execute('''CREATE TABLE IF NOT EXISTS UsInf (id, name, rname, role, Blockid, fotoid )''')
 
 
-def GitHub(uid):
-  try:
-    g = Github(os.environ['GitHub'])
-    repo = g.get_repo(os.environ['path'])
-    with open("LW.db", "rb") as file:
-        content = file.read()
-    old_file = repo.get_contents("LW.db")
-    repo.update_file(old_file.path, "commit message", content, old_file.sha)
-    g.close()
-    return True
-  except:
-    bot.send_message(uid, "GTSAVE невозможен. Возможно вы не указали токен GitHub (GitHub) и путь к вашему репл (name) в формате 'имя/репл', или же не создали LW.db в гитхабе")
-    return False
 
 
 def gasanbek(f, message, tp=0, new = 1):
@@ -68,10 +55,16 @@ def gasanbek(f, message, tp=0, new = 1):
   if new != 1 and not (BlockId == message.message.id):
     bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id,text=phrase[1])
     return
+    
+  if starter[1]=="player":
+    print(Inf(uid))
+  elif starter[1]=="way":
+    print(text,bttn,img,maps,spell)
+  elif starter[1]!=None:
+    print(Inf(str(starter[1])))
+  
 
 
-#Мод - вещь, которая говорит, какую информацию надо будет выводить в консоль. Мод традиционно задается первой строчкой где написанна его разновидность. Совет: Чтобы лучше понять протестируйте сами.
-#Это мод way. Выводит словари text, bttn, img
 
   #Удаление изображений
   if len(str(cur.execute("SELECT fotoid FROM UsInf WHERE (id) = (?)",(uid, )).fetchall()[0][0])) != 0:
@@ -141,18 +134,18 @@ def gasanbek(f, message, tp=0, new = 1):
           if way[1]!="":
             start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
             keyboard1.add(start_button2)
-
+          
         #Тип кнопки c. Позволяет отчищать
         elif way[2] == "c":
           if len(way) == 3:
             clear(uid)
           else:
             clear(uid, list=way[3:])
-
+            
           if way[1]!="":
             start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
             keyboard1.add(start_button2)
-
+        
         #Тип кнопки r. Позволяет придавать значениям переменных рандомное значение
         elif way[2] == "r":  
             if way[1]=="@":
@@ -348,7 +341,7 @@ def RLW(text,uid):
         part+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]).split()[1]
       elif k=="role":
         part+=str(cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0])
-
+      
       elif k in ("S1","s1"): 
          part+="~"
       elif k in ("S2","s2"):
@@ -495,7 +488,7 @@ def door(uid, name, key="1"):
 
 def fmap(uid, name="",mway=[]):
   if mway==[]:
-    mway=maps[name]
+    mway, maprole   =   maps[name],  True
   mmod=mway[0].split()
   if mmod[0] == "or":
     cat = True
@@ -506,7 +499,7 @@ def fmap(uid, name="",mway=[]):
       if door(uid, mway[1 + mecho * 2], mway[2 + mecho * 2]):
         break
     else:
-      cat = False
+      cat  = False
   if mmod[0] == "and":
     cat = False
     for mecho in range(len(mway[1:]) // 2):
@@ -522,13 +515,44 @@ def fmap(uid, name="",mway=[]):
       cur.execute("UPDATE box SET skey = key WHERE (mod,id) = ('',?)", (uid, ))
     elif ExM == "l":
       cur.execute("UPDATE box SET key = skey WHERE (mod,id) = ('',?)", (uid, ))
-  return cat
+    elif ExM == "w":
+      cur.execute("UPDATE box SET key = skey WHERE (mod,id) = ('',?)", (uid, ))
+  return cat and maprole
 
 def say(ad):
   if ad=="":return
   for citizen in cur.execute("SELECT DISTINCT id FROM UsInf").fetchall():
     bot.send_message(citizen[0],ad.replace("|", "\n"))
 
+def Player(id):
+  messI=""
+  role = cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(id,)).fetchall()[0][0]
+  messI+=str(role) + " "
+  name = cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(id, )).fetchall()[0][0]
+  messI+=str(name) + " Он же "
+  rname = cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(id, )).fetchall()[0][0]
+  messI+=str(rname) + " Или же агент " + str(id) + " "
+  rows = cur.execute("SELECT box, key FROM box WHERE id = ?", (id, ))
+  for row in rows:
+    messI += str(row[0]) + " - " + str(row[1]) + " "
+  messI += "\n\n"
+  return messI
+
+
+def Inf(id="all"):
+  try:
+    messI = "LairWayINF:\n\n"
+    if id == "all":
+      idlist = cur.execute("SELECT DISTINCT id FROM UsInf").fetchall()
+    elif str(id)[0]=="@":
+      idlist = cur.execute("SELECT DISTINCT id FROM UsInf WHERE (name) = (?)",(id[1:],)).fetchall()
+    else:
+      idlist = [[id]]
+    for ide in idlist: 
+      messI+=Player(ide[0])
+    return messI
+  except:
+    return "Error Lairway Inf"
 #Функция LairwayRead, которая читает файл игры и делит ее сначало построчно а затем делит ее на элементы по этому символу ~. В последующих строках мы спрашиваем его, чем является первый элемент этой строки. Если это tx, то мы превращаем последующие элементы строки в список и добавляем в словарь text, где ключом является номер текста, а значением все последующие значения текста. Аналогично для "bt" и "img"
 def LairWayRead():
   cur.execute("UPDATE UsInf SET role = 'commoner' ")
@@ -584,10 +608,12 @@ def LWR(game):
             spl.append(gg[1])
             for i in range(2, len(gg)):
               spell[gg[1]].append(gg[i])
+              
           elif gg[0] == "ph":
-            starter[0] = gg[1]
-            phrase[0] = gg[2]
-            phrase[1] = gg[3]
+            if len(gg)==2:starter[0] = gg[1]
+            if len(gg)==3:phrase[0] = gg[2]
+            if len(gg)==4:phrase[1] = gg[3]
+            if len(gg)==5: starter[1]= gg[4]  
           elif gg[0] == "role":
             for lord in gg[1:]:
               if lord[0]=="@":
@@ -597,7 +623,7 @@ def LWR(game):
               else:
                 cur.execute("UPDATE UsInf SET role = 'wanderer' WHERE (name) = (?)",(lord,))
   except Exception as err:
-      print(f"ERROR!:\n.Чтение файла {game}.lairway - \n Ошибка {err}")
+      print(f"ERROR!:\n.Чтение файла {game} - \n Ошибка {err}")
 
 
 
@@ -629,7 +655,7 @@ def самостоятельный(call):
 @bot.message_handler(commands=['lairway'])
 def TextCommand(message):
   IfInBox(message.from_user.id, message)
-  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - Rebirth(0.13)[Render&GitHub] Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
+  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - Dark Return(0.14)  Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
 
 
 #Считывает файл сюжета игры
@@ -677,20 +703,12 @@ def InfCommand(message):
   IfInBox(message.from_user.id, message)
   sayrole=["lord"]
   if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in sayrole: 
-    try:
-      messI="LairWayINF:\n\n"
-      IDIS = cur.execute("SELECT DISTINCT id FROM UsInf").fetchall()
-      for IDI in IDIS:
-        messI+=str(cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(IDI[0],)).fetchall()[0][0])+" "
-        messI+=str(cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(IDI[0], )).fetchall()[0][0])+" Он же "
-        messI+=str(cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(IDI[0], )).fetchall()[0][0])+" Или же агент "+str(IDI[0])+" "
-        rows = cur.execute("SELECT box, key FROM box WHERE id = ?", (IDI[0], ))
-        for row in rows:
-          messI+=str(row[0])+" - "+str(row[1])+" "
-        messI+="\n\n"
-      bot.send_message(message.from_user.id,messI)
-    except:
-      bot.send_message(message.from_user.id,"Что-то пошло не так")
+    infsay=message.text.split()
+    if len(infsay)>1:
+      if infsay[1]=="me": bot.send_message(message.from_user.id,Inf(message.from_user.id))
+      else:  bot.send_message(message.from_user.id,Inf("@"+infsay[1]))
+    else: 
+      bot.send_message(message.from_user.id,Inf("all"))
   else:
     bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
@@ -707,15 +725,16 @@ def LWreadCommand(message):
   else:
      bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
-@bot.message_handler(commands=['LW','LWdb','lwdb','save','Save',"sql","Sql","SQL","db"])
+@bot.message_handler(commands=['save','Save',"GHS","gts","sql"])
 def LWsaveCommand(message):
   tprole=("lord")
   if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
-    if GitHub(message.from_user.id):
+    if GHS():
       bot.send_message(message.from_user.id, "SQL сохранен!")
+    else: 
+      bot.send_message(uid, "GTSAVE невозможен. Возможно вы не указали токен GitHub (GitHub) и путь к вашему репл (name) в формате 'имя/репл', или же не создали LW.db в гитхабе")
   else:
-     bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
-
+    bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
 
 @bot.message_handler(commands=['tp',"Tp"])
 def TpCommand(message):
@@ -750,7 +769,7 @@ def LWtestCommand(message):
     try:
       name=message.text.split()[1]
       with open(name,"rb") as file:
-        bot.send_document(message.chat.id,file,"name")
+        bot.send_document(message.from_user.id,file,"name")
     except:
       bot.send_message(message.from_user.id, "Вы забыли указать название файла, фаил не найден или произошла другая ошибка.")
   else:
@@ -783,10 +802,10 @@ def Spell(message):
         bot.send_message(uid, RLW(splway[3],uid))
       else:
         bot.send_message(uid, RLW(phrase[0],uid))
+      
 
-
-
-
+      
+  
 @bot.message_handler(content_types=['text'])
 def TextCommand(message):
   bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
@@ -797,6 +816,5 @@ def stickCommand(message):
   bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
 
 
-
-keep_alive()
+LWLS()
 bot.polling(none_stop=True, timeout=123)
