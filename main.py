@@ -62,7 +62,6 @@ def gasanbek(f, message, tp=0, new = 1):
     print(text,bttn,img,maps,spell)
   elif starter[1]!=None:
     print(Inf(str(starter[1])))
-  
 
 
 
@@ -83,11 +82,10 @@ def gasanbek(f, message, tp=0, new = 1):
       bot.send_message(message.from_user.id, "Error:\nВы пытаетесь использовать пустую кнопку/картинку "+str(text[f][i][1:])+" после текста "+str(f)+".")
       continue
     if text[f][i] == "KillGame" and new==0:
-     try:bot.delete_message(message.from_user.id, message.message.id)
-     except:bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id, text="):")
-     return
-
-
+      try:bot.delete_message(message.from_user.id, message.message.id)
+      except:bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id, text="):")
+      return
+      
     if text[f][i][0] == "@": 
       if text[f][i][1:] not in img:
         bot.send_message(message.from_user.id, "Error:\nКартинки "+str(text[f][i][1:])+" не существует, но она указана после текста "+str(f)+".")
@@ -235,19 +233,32 @@ def gasanbek(f, message, tp=0, new = 1):
 
         elif way[2] == "w":
           #bt~1~text[0]~[1]~w[2]~max[3]~foo[4]~way(2)[5]~bar[6]~way(3)[7]../
-          ways = []
-          for a in range((len(way[3:]) // 2)):
-            ways.append([cur.execute("SELECT key FROM box WHERE (id, box) = (?, ?)", (uid, way[4 + a * 2])).fetchall()[0][0]] + [way[5 + a * 2]])
+          ways= []
+          
+          if way[1]=="@":
+             for a in range((len(way[3:]) // 3)):
+              IfTheBox(way[4 + a * 3],uid)
+              ways.append([cur.execute("SELECT key FROM box WHERE (id, box) = (?, ?)", (uid, way[4 + a * 3])).fetchall()[0][0]] + [way[5 + a * 3]] +[ way[6 + a * 3]])
+          else:
+            for a in range((len(way[3:]) // 2)):
+              IfTheBox(way[4 + a * 2],uid)
+              ways.append([cur.execute("SELECT key FROM box WHERE (id, box) = (?, ?)", (uid, way[4 + a * 2])).fetchall()[0][0]] + [way[5 + a * 2]])
+
           ways.sort(key=lambda x: x[0])
-          wayslen=len(ways)-1
+
+          wayslen  ,waytext =len(ways)-1,way[0]
           if way[3]=="max":
-            start_button2 = telebot.types.InlineKeyboardButton(text=way[0], callback_data=ways[wayslen][1])
+            if way[1]=="@": waytext=ways[wayslen][2]
+            start_button2 = telebot.types.InlineKeyboardButton(text=waytext, callback_data=ways[wayslen][1])
             keyboard1.add(start_button2)
+    
           if way[3]=="min":
-           start_button2 = telebot.types.InlineKeyboardButton(text=way[0], callback_data=ways[0][1])
+           if way[1]=="@": waytext=ways[0][2]
+           start_button2 = telebot.types.InlineKeyboardButton(text=waytext, callback_data=ways[0][1])
            keyboard1.add(start_button2)
           if way[3]=="med":
-           start_button2 = telebot.types.InlineKeyboardButton(text=way[0], callback_data=ways[wayslen//2][1])
+           if way[1]=="@": waytext=ways[wayslen//2][2]
+           start_button2 = telebot.types.InlineKeyboardButton(text=waytext, callback_data=ways[wayslen//2][1])
            keyboard1.add(start_button2)
 
         elif way[2] == "s":
@@ -264,19 +275,9 @@ def gasanbek(f, message, tp=0, new = 1):
           keyboard1.add(start_button2)
 
         elif way[2] == "v":
-          VIP=False
-          who=cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
-          if who=="lord": VIP=True
-          elif (way[3] in ("high","h")) and who=="herceg": VIP==True
-          elif (way[3] in ("w","way","wanderer","low")) and (who=="wanderer" or who=="herceg"): 
-            VIP=True
-          elif way[3] in ("name","names","n"):
-            if cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(id,)).fetchall()[0][0] in way[3:]:
-              VIP=True
-          if VIP:
-            start_button2 = telebot.types.InlineKeyboardButton(
-                text=way[0], callback_data=way[1])
-            keyboard1.add(start_button2) 
+          if role(uid,way[3]):
+            start_button2 = telebot.types.InlineKeyboardButton(text=way[0],callback_data=way[1])
+            keyboard1.add(start_button2)
 
 
       except Exception as e:
@@ -298,6 +299,9 @@ def gasanbek(f, message, tp=0, new = 1):
   else:
       bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id, text=RLW(text[f][0],uid), reply_markup=keyboard1)
 
+
+
+
 def IfInBox(uid,message):
   if (uid,) in cur.execute("SELECT id FROM UsInf").fetchall(): return
   cur.execute("INSERT OR IGNORE INTO UsInf VALUES (?, ?, ?,  'commoner', 0,'')", (uid, message.from_user.username,str(message.chat.first_name) + " " + str(message.chat.last_name)))
@@ -313,7 +317,10 @@ def IfTheBox(name, uid):
     cur.execute("INSERT OR IGNORE INTO box VALUES (?, ?, 0, 0,'')", (uid,name))
     conn.commit()
 
+
+
 def RLW(text,uid):
+  text = text.replace("|", "\n")
   if text.startswith("@"):
     parts = text[1:].split("@")
     part = ""
@@ -356,30 +363,39 @@ def RLW(text,uid):
       else:
         part += k
     text=part
-  text = text.replace("|", "\n")
+  
   return text
 
+def RoleCost(role):
+  if type(role)==int: return role
+  elif role=="lord": return 3
+  elif role in ("herceg","high","h"): return 2
+  elif role in ("w","way","wanderer","low"):return 1
+  else: return 0
 
-
+def role(uid, rn):
+  ticket=False
+  role=cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
+  if RoleCost(role)>=RoleCost(rn): return True
+  else: return False
 
 
 
 def clear(uid, list=[], mody="n"):
   if mody == "n":
     if len(list) == 0:
-      cur.execute("UPDATE box SET key = 0, skey = 0 WHERE (mod,id) = ('',?)",
-                  (uid, ))
+      cur.execute("UPDATE box SET key = 0, skey = 0 WHERE (mod,id) = ('',?)",(uid, ))
     else:
       for a in list:
-        cur.execute(
-            "UPDATE box SET key = 0, skey = 0 WHERE (mod,box,id) = ('',?, ?)",(a,uid,))
+        cur.execute("UPDATE box SET key = 0, skey = 0 WHERE (mod,box,id) = ('',?, ?)",(a,uid,))
         cur.execute("UPDATE box SET key = 0 WHERE (mod,box, id) = ('@', ?,?)", (a,uid,))
-
+  
   if mody == "@":
     cur.execute("UPDATE box SET key = 0 WHERE (mod,box,id) = ('@',?)",(auid,))
 
 
 def key(name, tokey, uid):
+   
     IfTheBox(name,uid)
     if tokey[0] == "+":
       cur.execute("UPDATE box SET key = key+? WHERE (id,box) = (?,?)",(int(tokey[1:]), uid, name))
@@ -415,8 +431,6 @@ def key(name, tokey, uid):
           Who=sum(Glist)
         if tokey[0] == "M":
           Who=max(Glist)
-
-
       if tokey[1] == "+":
           cur.execute("UPDATE box SET key = key+? WHERE (id,box) = (?,?)",(Who, uid, name))
 
@@ -432,7 +446,6 @@ def key(name, tokey, uid):
 
 def door(uid, name, key="1"):
   IfTheBox(name,uid)
-
   if key=="map":
     return fmap(uid,name)
 
@@ -487,8 +500,9 @@ def door(uid, name, key="1"):
     return Behind
 
 def fmap(uid, name="",mway=[]):
+  maprole=True
   if mway==[]:
-    mway, maprole   =   maps[name],  True
+    mway=maps[name]
   mmod=mway[0].split()
   if mmod[0] == "or":
     cat = True
@@ -513,11 +527,13 @@ def fmap(uid, name="",mway=[]):
   for ExM in mmod[1:]:
     if ExM == "s":
       cur.execute("UPDATE box SET skey = key WHERE (mod,id) = ('',?)", (uid, ))
-    elif ExM == "l":
-      cur.execute("UPDATE box SET key = skey WHERE (mod,id) = ('',?)", (uid, ))
-    elif ExM == "w":
-      cur.execute("UPDATE box SET key = skey WHERE (mod,id) = ('',?)", (uid, ))
-  return cat and maprole
+    elif ExM in ("l","lord"):
+      if not role(uid, "lord"): maprole = False
+    elif ExM in ("h","high","herceg"):
+      if not role(uid, "h"): maprole = False
+    elif ExM in ("w","low","wanderer"):
+       if not role(uid, "w"): maprole = False
+  return (cat and maprole)
 
 def say(ad):
   if ad=="":return
@@ -537,6 +553,32 @@ def Player(id):
     messI += str(row[0]) + " - " + str(row[1]) + " "
   messI += "\n\n"
   return messI
+
+def bye(rez, who='',box=""):
+  try:
+    if rez == "all":
+      cur.execute("DELETE FROM box")
+      conn.commit()
+      cur.execute("DELETE FROM UsInf")
+      conn.commit()
+    elif rez == "box":
+      cur.execute("DELETE FROM box")
+      conn.commit()
+    elif rez == 'user':
+      id = cur.execute("SELECT id FROM UsInf WHERE (name) = (?)",(who, )).fetchall()[0][0]
+      if box=="":
+        cur.execute("DELETE FROM box WHERE id = ?", (id,))
+      else:
+        cur.execute("DELETE FROM box WHERE (id,box) = (?,?)", (id,box))
+      conn.commit()
+    elif rez == 'id':
+      cur.execute("DELETE FROM box WHERE id = ?", (who,))
+      conn.commit()
+    return True
+  except Exception as e:
+    print(e)
+    return False
+
 
 
 def Inf(id="all"):
@@ -632,6 +674,7 @@ LairWayRead()
 
 
 
+
 def Lairway(f,message, tp=0, new = 1):
   try:
     gasanbek(f=f,message=message, tp=tp, new = new)
@@ -650,12 +693,11 @@ def самостоятельный(call):
   Lairway(call.data, call, new = 0)
 
 
-
 #Команда lairway которая выводит основную информацию о движке
 @bot.message_handler(commands=['lairway'])
 def TextCommand(message):
   IfInBox(message.from_user.id, message)
-  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - Dark Return(0.14)  Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
+  bot.send_message(message.from_user.id,"Вас приветсвует текстовый ТБ-движек LairWay. Версия Lairway - Pre-Release 1.0 Attempt 2 or 1.14.1.  Основные разработчики - catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക്. Количество пользователей этого бота - " + str(len(cur.execute("SELECT DISTINCT id FROM UsInf").fetchall())) +". Cвязь с разработчиком движка - LairWayBot@gmail.com.")
 
 
 #Считывает файл сюжета игры
@@ -667,8 +709,10 @@ def ReadCommand(message):
 #Очищяет все неизменямые переменные
 @bot.message_handler(commands=['ClearMe','reset',"Reset", 'Rebith', 'rebith'])
 def CleanCommand(message):
-  bot.send_message(message.from_user.id, "Ваши достижения сброшены!")
-  clear(message.from_user.id,mody="@")
+  if bye("id", message.from_user.id):
+    bot.send_message(message.from_user.id, "Ваши достижения сброшены!")
+  else: bot.send_message(message.from_user.id, "Error.")
+
 
 
 @bot.message_handler(commands=['Size','size'])
@@ -689,11 +733,31 @@ def SizeCommand(message):
   bot.send_message(message.from_user.id, "В игре в текстах " +str(Size[0])+" символов, в кнопках " +str(Size[1])+" символов, а так же дополнительно "+str(Size[2])+". ТЕ суммарно " +str(Size[0]+Size[1]+Size[2])+" символов.")
 #Команды админов
 
+@bot.message_handler(commands=['bye', 'del', 'delete', 'clrsql',"clear"])
+def DelCommand(message):
+  if role(message.from_user.id,"lord"):
+    dell=message.text.split()
+    if len(dell)==1: 
+      if not bye("all"):
+        bot.send_message(message.from_user.id, "Error"); return
+    elif dell[1]=="box": 
+      if not bye("box"):
+        bot.send_message(message.from_user.id, "Error") ; return  
+    elif len(dell)==3:
+      if not bye("user", dell[1],dell[2]):
+         bot.send_message(message.from_user.id, "Error. \n Возможно вы ввели никнейм несущесвующего юзера или имя переменной."); return
+    else: 
+      if not bye("user", dell[1]):
+         bot.send_message(message.from_user.id, "Error. \n Возможно вы ввели никнейм несущесвующего юзера."); return
+    bot.send_message(message.from_user.id, "Очистка произведена удачно. Вы очистили Землю от этих жалких людей, поздравляю!")
+  
+  else:
+    bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
+
+
 @bot.message_handler(commands=['Say',"say"])
 def SayCommand(message):
-  IfInBox(message.from_user.id, message)
-  sayrole=["lord"]
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in sayrole: 
+  if role(message.from_user.id,"lord"):
     say(message.text[4:])
   else:
     bot.send_message(message.from_user.id, "У вас не хватает прав для использования этой команды!")
@@ -701,8 +765,7 @@ def SayCommand(message):
 @bot.message_handler(commands=['Inf',"inf"])
 def InfCommand(message):
   IfInBox(message.from_user.id, message)
-  sayrole=["lord"]
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in sayrole: 
+  if role(message.from_user.id,"lord"): 
     infsay=message.text.split()
     if len(infsay)>1:
       if infsay[1]=="me": bot.send_message(message.from_user.id,Inf(message.from_user.id))
@@ -714,8 +777,7 @@ def InfCommand(message):
 
 @bot.message_handler(commands=['File','file'])
 def LWreadCommand(message):
-  tprole=("lord")
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+  if role(message.from_user.id,"lord"):
     try:
       bttn,text={},{}
       LWR(message.text[6:]+".lairway")
@@ -727,8 +789,7 @@ def LWreadCommand(message):
 
 @bot.message_handler(commands=['save','Save',"GHS","gts","sql"])
 def LWsaveCommand(message):
-  tprole=("lord")
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+  if role(message.from_user.id,"h"):
     if GHS():
       bot.send_message(message.from_user.id, "SQL сохранен!")
     else: 
@@ -738,9 +799,8 @@ def LWsaveCommand(message):
 
 @bot.message_handler(commands=['tp',"Tp"])
 def TpCommand(message):
-  tprole=("lord","herceg")
   IfInBox(message.from_user.id, message)
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+  if role(message.from_user.id,"h") :
     try:
       gasanbek(starter[0], message, tp=message.text[4:])
     except:
@@ -752,8 +812,7 @@ def TpCommand(message):
 
 @bot.message_handler(commands=['key','Key'],)
 def perem(message):
-  tprole=("lord","herceg")
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+  if role(message.from_user.id,"lord"): 
     try:
       key(message.text.split()[1], message.text.split()[2].replace("~"," "), uid=message.from_user.id)
       bot.send_message(message.from_user.id, 'Вы изменили значение переменной')
@@ -764,8 +823,7 @@ def perem(message):
 
 @bot.message_handler(commands=['send','Send'])
 def LWtestCommand(message):
-  tprole=("lord")
-  if cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(message.from_user.id, )).fetchall()[0][0] in tprole: 
+  if role(message.from_user.id,"lord"):
     try:
       name=message.text.split()[1]
       with open(name,"rb") as file:
@@ -784,13 +842,7 @@ def Spell(message):
   if len(splway)==1:
     Lairway(splway[0], message)
   elif len(splway)==2:
-    VIP=False
-    who=cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
-    if who=="lord": VIP=True
-    elif (splway[1] in ("high","h")) and who=="herceg": VIP=True
-    elif splway[1] in ("w","way","wanderer","low") and (who=="wanderer" or who=="herceg"):
-        VIP=True
-    if VIP: 
+    if role(uid,splway[1]):
       Lairway(splway[0], message)
     else: 
       bot.send_message(uid, "У вас не хватает прав для использования этой команды!")
