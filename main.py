@@ -294,7 +294,7 @@ def gasanbek(f, message, tp=0, new = 1):
     cur.execute("UPDATE UsInf SET Blockid = ? WHERE (id) = (?)",(forblockid,uid,))
     conn.commit()
     sphr=""
-    if f==starter[0]: sphr= "Создано при использововании LairWay. Удачной игры! \n\n"
+    if f==starter[0]: sphr= ""
     bot.send_message(message.from_user.id, sphr+RLW(text[f][0], uid), reply_markup=keyboard1)
   else:
       bot.edit_message_text(chat_id=message.from_user.id, message_id=message.message.message_id, text=RLW(text[f][0],uid), reply_markup=keyboard1)
