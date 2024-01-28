@@ -1,10 +1,11 @@
-
 from flask import Flask
 from flask import request
 from threading import Thread
 from time import sleep
 from github import Github
 import os
+
+LairEyeV="RenderV1"
 
 app = Flask('')
 @app.route('/')
@@ -29,13 +30,13 @@ def GHS():
     old_file = repo.get_contents("LW.db")
     repo.update_file(old_file.path, "commit message", content, old_file.sha)
     g.close()
-    print("Сохранение удачно")
+    print("Save successful/Сохранение удачно")
     return True
-
-    print("Сохранение неудачно")
+    print("Save failed/Сохранение неудачно")
     return False
 
 def GitWay():
   while True:
     sleep(60*60*24)
     GHS()
+
