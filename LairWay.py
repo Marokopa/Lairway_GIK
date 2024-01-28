@@ -515,13 +515,19 @@ def Player(id):
   return inf
 
 
-def Inf(id="all"):
+def Inf(id="all", uid = None):
   try:
     messI = "LairWayINF:\n\n"
     if id == "all":
       idlist = Ids()
+    elif id == 'players':
+      idlist = Ids()
+      for ide in idlist:
+        Send(uid, Player(ide[0]))
+      return  "Lairway BigInf"
     elif str(id)[0]=="@":
       idlist = [[ Who(str(id)[1:])]]
+    
     else:
       idlist = [[id]]
     for ide in idlist:

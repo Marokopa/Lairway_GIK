@@ -103,16 +103,23 @@ def SayCommand(message):
 
 @bot.message_handler(commands=['Inf',"inf"])
 def InfCommand(message):
+  uid=Uid(message)
   IfInBox(message.from_user.id, message)
   if role(message.from_user.id,"lord"): 
     infsay=message.text.split()
     if len(infsay)>1:
       if infsay[1]=="me": bot.send_message(message.from_user.id,Inf(message.from_user.id))
+      elif infsay[1] == 'players':
+        Send(uid,Inf("players",uid))
+        
       else:  bot.send_message(message.from_user.id,Inf("@"+infsay[1]))
     else: 
       bot.send_message(message.from_user.id,Inf("all"))
   else:
     Send(message.from_user.id, SM.Mess("NoRole",lang))
+
+
+
 
 @bot.message_handler(commands=['File','file'])
 def LWreadCommand(message):
