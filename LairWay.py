@@ -524,7 +524,6 @@ def Inf(id="all", uid = None):
       idlist = Ids()
       for ide in idlist:
         Send(uid, Player(ide[0]))
-      return  "Lairway BigInf"
     elif str(id)[0]=="@":
       idlist = [[ Who(str(id)[1:])]]
     
