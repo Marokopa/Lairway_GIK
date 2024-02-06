@@ -1,2 +1,2 @@
-from LairBox import *
-from LairFace import *
+from LairWay.Tools import *
+

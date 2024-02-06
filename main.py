@@ -1,11 +1,8 @@
-from LairWay import *
-
-
-
+from lairway import *
 
 @bot.message_handler(commands=['start','go','run','game'])
 def StartCommand(message):
-  IfInBox(message.from_user.id, message)
+  IfInBox(Uid(message), message)
   Lairway(starter[0], message)
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -16,24 +13,24 @@ def самостоятельный(call):
 #Команда lairway которая выводит основную информацию о движке
 @bot.message_handler(commands=['lairway'])
 def TextCommand(message):
-  IfInBox(message.from_user.id, message)
-  SM.New("LairWay",["en","ru"],["Welcome to the Lairway TB engine. \n Developers: catman (great and main), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nCommunication - LairWay Bot@gmail.com \n\n Lairway version - "+LairWayV+ "\n IV_"+ LairFaceV +" LWdb_"+LairBoxV+" EyeSys_"+LairEyeV+"\n\nThe number of users of this bot is "+str(len(Ids()))+"\nHave a nice game!","Вас приветствует ТБ-движек Lairway. \n Разработчики: catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nСвязь - LairWayBot@gmail.com \n\n Версия Lairway - "+LairWayV+ "\n IV_"+ LairFaceV +" LWdb_"+LairBoxV+"   EyeSys_"+LairEyeV+"\n\n Количество пользоватлей этого бота - "+str(len(Ids()))+"\nПриятной игры!"])
-  Send(message.from_user.id,SM.Mess("LairWay",lang))
+  IfInBox(Uid(message), message)
+  SM.New("LairWay",["en","ru"],["Welcome to the Lairway TB engine. \n Developers: catman (great and main), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nCommunication - LairWay Bot@gmail.com \n\n Lairway version - "+LairWayV+ "\n IV_"+ LairFaceV +" LWdb_"+LairBoxV+" EyeSys_"+LairEyeV+"\n\nThe number of users of this bot is "+str(len(Ids()))+"\nHave a nice game!","Вас приветствует ТБ-движек Lairway. \nРазработчики: catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nСвязь - LairWayBot@gmail.com \n\nВерсия Lairway - "+LairWayV+ "\nIV_"+ LairFaceV +" LWdb_"+LairBoxV+"   EyeSys_"+LairEyeV+"\n\nКоличество пользоватлей этого бота - "+str(len(Ids()))+"\nПриятной игры!"])
+  Send(Uid(message),SM.Mess("LairWay",lang))
 
 
 #Считывает файл сюжета игры
 @bot.message_handler(commands=['Read','read'])
 def ReadCommand(message):
-  bot.send_message(message.from_user.id, "Фаил прочитан.")
+  Send(Uid(message), "Фаил прочитан.")
   LairWayRead()
 
 #Очищяет все неизменямые переменные
 @bot.message_handler(commands=['ClearMe','reset',"Reset", 'Rebith', 'rebith'])
 def CleanCommand(message):
   SM.New("reset", ["en", "ru"], ["Your achievements have been reset!", "Ваши достижения сброшены!"])
-  if bye("id", message.from_user.id):
-    bot.send_message(message.from_user.id, SM.Mess("reset", lang))
-  else: bot.send_message(message.from_user.id, "Error.")
+  if bye("id", Uid(message)):
+    Send(Uid(message), SM.Mess("reset", lang))
+  else: Send(Uid(message), "Error.")
 
 
 
@@ -53,7 +50,7 @@ def SizeCommand(message):
     for a in img:
       if len(img[a])>1:
         Size[2]+=len(img[a][1])
-  bot.send_message(message.from_user.id, SM.Mess("Size",lang))
+  Send(Uid(message), SM.Mess("Size",lang))
 #Команды админов
 
 SM.New("NoRole",["en","ru"],["You do not have sufficient rights to use this command!","У вас не хватает прав для использования этой команды!"])
@@ -73,115 +70,123 @@ SM.New('del_er2', ['en', 'ru'], ['Error. \nYou may have entered the nickname of 
 
 @bot.message_handler(commands=['bye', 'del', 'delete', 'clrsql',"clear"])
 def DelCommand(message):
-
-  if role(message.from_user.id,"lord"):
+  if role(Uid(message),"lord"):
     dell=message.text.split()
     if len(dell)==1: 
       if not bye("all"):
-        bot.send_message(message.from_user.id, "Error"); return
+        Send(Uid(message), "Error"); return
     elif dell[1]=="box": 
       if not bye("box"):
-        bot.send_message(message.from_user.id, "Error") ; return  
+        Send(Uid(message), "Error") ; return  
     elif len(dell)==3:
       if not bye("user", dell[1],dell[2]):
-         bot.send_message(message.from_user.id, SM.Mess('del_er1', lang)); return
+        Send(Uid(message), SM.Mess('del_er1', lang)); return
     else: 
       if not bye("user", dell[1]):
-         bot.send_message(message.from_user.id, SM.Mess('del_er2', lang)); return
-    bot.send_message(message.from_user.id, SM.Mess("bye",lang))
+        Send(Uid(message), SM.Mess('del_er2', lang)); return
+    Send(Uid(message), SM.Mess("bye",lang))
 
   else:
-   Send(message.from_user.id, SM.Mess("NoRole",lang))
+   Send(Uid(message), SM.Mess("NoRole",lang))
 
 
 @bot.message_handler(commands=['Say',"say"])
 def SayCommand(message):
-  if role(message.from_user.id,"lord"):
+  if role(Uid(message),"lord"):
     say(message.text[4:])
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 @bot.message_handler(commands=['Inf',"inf"])
 def InfCommand(message):
   uid=Uid(message)
-  IfInBox(message.from_user.id, message)
-  if role(message.from_user.id,"lord"): 
+  IfInBox(Uid(message), message)
+  if role(Uid(message),"lord"): 
     infsay=message.text.split()
     if len(infsay)>1:
-      if infsay[1]=="me": bot.send_message(message.from_user.id,Inf(message.from_user.id))
-      elif infsay[1] == 'players':
+      if infsay[1]=="me": Send(Uid(message),Inf(Uid(message)))
+      elif infsay[1] in ('players', 'big','+'):
         Send(uid,Inf("players",uid))
         
-      else:  bot.send_message(message.from_user.id,Inf("@"+infsay[1]))
+      else:  Send(Uid(message),Inf("@"+infsay[1]))
     else: 
-      bot.send_message(message.from_user.id,Inf("all"))
+      Send(Uid(message),Inf("all"))
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 
 
 
 @bot.message_handler(commands=['File','file'])
 def LWreadCommand(message):
-  if role(message.from_user.id,"lord"):
+  if role(Uid(message),"lord"):
     try:
       bttn,text={},{}
       LWR(message.text[6:]+".lairway")
-      Send(message.from_user.id, SM.Mess("FO",lang))
+      Send(Uid(message), SM.Mess("FO",lang))
     except:
-      Send(message.from_user.id, SM.Mess("FE",lang))
+      Send(Uid(message), SM.Mess("FE",lang))
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 @bot.message_handler(commands=['save','Save',"GHS","gts","sql"])
 def LWsaveCommand(message):
-  if role(message.from_user.id,"h"):
+  if role(Uid(message),"h"):
     if GHS():
-      bot.send_message(message.from_user.id, SM.Mess('save',lang))
+      Send(Uid(message), SM.Mess('save',lang))
     else: 
-      bot.send_message(uid, SM.Mess("save_error",lang))
+      Send(uid, SM.Mess("save_error",lang))
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 @bot.message_handler(commands=['tp',"Tp"])
 def TpCommand(message):
-  IfInBox(message.from_user.id, message)
-  if role(message.from_user.id,"h") :
+  IfInBox(Uid(message), message)
+  if role(Uid(message),"h") :
     try:
       gasanbek(starter[0], message, tp=message.text[4:])
     except:
-      Send(message.from_user.id, SM.Mess(tp,lang))
+      Send(Uid(message), SM.Mess(tp,lang))
 
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 
 @bot.message_handler(commands=['key','Key'],)
 def perem(message):
-  if role(message.from_user.id,"lord"): 
+  if role(Uid(message),"h"): 
     try:
-      key(message.text.split()[1], message.text.split()[2].replace("~"," "), uid=message.from_user.id)
-      Send(message.from_user.id, SM.Mess("key",lang))
-    except:
-      Send(message.from_user.id, SM.Mess("key_er",lang))
+      kct=message.text.split()[1:]
+      if len(kct)==3:
+        if role(Uid(message),"lord"):
+          key(kct[1].replace("~"," "),kct[2].replace("~"," "), Who(kct[0]))
+        else:
+          Send(Uid(message),  SM.Mess("NoRole",lang))
+          return
+          
+      else: key(kct[0].replace("~"," "),kct[1].replace("~"," "), Uid(message))
+      Send(Uid(message), SM.Mess("key",lang))
+    except Exception as e:
+      print(e)
+      Send(Uid(message),  SM.Mess("key_er",lang))
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
 @bot.message_handler(commands=['send','Send'])
 def LWtestCommand(message):
-  if role(message.from_user.id,"lord"):
+  if role(Uid(message),"lord"):
     try:
       name = message.text.split()[1]
-      with open(name, "rb") as file: bot.send_document(message.from_user.id, file, "name")
+      with open(name, "rb") as file: bot.send_document(Uid(message), file)
     except:
-      Send(message.from_user.id, SM.Mess("FE",lang))
+      Send(Uid(message), SM.Mess("FE",lang))
   else:
-    Send(message.from_user.id, SM.Mess("NoRole",lang))
+    Send(Uid(message), SM.Mess("NoRole",lang))
 
  #другом случае:
 @bot.message_handler(commands=spl)
 def Spell(message):
-  uid = message.from_user.id
+  uid = Uid(message)
   command=message.text.split()[0][1:]
   splway=spell[command]
   if len(splway)==1:
@@ -190,28 +195,24 @@ def Spell(message):
     if role(uid,splway[1]):
       Lairway(splway[0], message)
     else: 
-      Send(message.from_user.id, SM.Mess("NoRole",lang))
+      Send(uid, SM.Mess("NoRole",lang))
   elif len(splway)>2:
     if door(uid,splway[1],splway[2]):
       Lairway(splway[0], message)
     else:
-      if len(splway)>3:
-        bot.send_message(uid, RLW(splway[3],uid))
+      if len(splway) > 3:
+          Send(Uid(message), RLW(splway[3], Uid(message)))
       else:
-        bot.send_message(uid, RLW(phrase[0],uid))
-
-
-
-
+          Send(Uid(message), RLW(phrase[0], Uid(message)))
+      
 @bot.message_handler(content_types=['text'])
 def TextCommand(message):
-  bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
+  Send(Uid(message), RLW(phrase[0], Uid(message)))
 
 
 @bot.message_handler(content_types=['sticker'])
 def stickCommand(message):
-  bot.send_message(message.from_user.id, RLW(phrase[0],message.from_user.id))
-
-
+  Send(Uid(message), RLW(phrase[0], Uid(message)))
+  
 LWLS()
 bot.polling(none_stop=True, timeout=123)
