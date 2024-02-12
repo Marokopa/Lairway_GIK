@@ -1,37 +1,48 @@
 from LairWay.LairEye import *
 from LairWay.LairBox import *
 from LairWay.LairFace import *
+from LairWay.SysWay import *
 import random
+
+global lang
 lang="en"
-SM.New('LW', ['en', 'ru'], ["Created using LairWay. Good game!\n","Создано при использововании LairWay. Удачной игры!\n "])
-SM.New('RKE', ['en', 'ru'], ["ERROR 1R : Syntax error. Required @?key/?/needkey/?/text1/?/text2, where key is the name of the variable and needkey is the key of the desired value of the variable, text1 is the text if the condition is true, text2 is the text if the condition is true lie","ERROR: Ошибка синтаксиса. Требуеться @?key/?/needkey/?/text1/?/text2, где key - название переменной а needkey - ключ нужного значения переменной, text1 - текст если условине - истино, text2 - текст если условие - ложь"])
-SM.New('RSE', ['en', 'ru'], ["ERROR 2R: Door syntax error inside '@?'","ERROR 2R: Ошибка синтаксиса door внутри '@?'"])
-SM.New('P', ['en', 'ru'], ["Error 0: Some minor problem. I'll try again after some time.","Error 0: Какая-то небольшая проблема. Попробуйье еще раз через какое-то время."])
+
+text = {}
+bttn = {}
+img = {}
+maps={}
+spell={}
 
 
-
-def RoleCost(role):
+def RoleCost(role: str) -> int:
+  '''the function takes on a role and returns its value as an int. \n
+  "lord"/"l" = 3 ; "herceg", "h" = 2 ; "wanderer", "w" = 1; other - 0\n'''
   if type(role)==int: return role
   elif role=="lord": return 3
   elif role in ("herceg","high","h"): return 2
   elif role in ("w","way","wanderer","low"):return 1
   else: return 0
 
-def role(uid, rn):
+def role(uid: int, rn: str) -> bool:
+  '''The function checks the user's role relative to the required one and if his role is required or higher, then it returns True, otherwise False\n'''
   role=Role(uid)
   if RoleCost(role)>=RoleCost(rn): return True
   else: return False
 
 
-def clear(uid, list=[]):
+def clear(uid:int, list: list=[]): 
+  '''If the list is empty, then all normal variables are cleared, otherwise the variables in the list are cleared.'''
   if len(list) == 0:
     ClearNormal(uid)
   else:
     for a in list:
       ClearThis(uid,a)
 
-def key(name, tokey, uid):
-    IfTheBox(name,uid)
+def key(name: str, tokey: str, uid: int):
+    '''Key changes the variable according to CCИП\n 
+    name -) name of var in lairway. ('foo')\n
+    tokey -) how  variable change requirement ('+5')'''
+    IfInBox(name,uid)
     if tokey[0] == "=": NewBox(uid,name,int(tokey[1:]))
     elif tokey[0] == "+": AddBox(uid, name,int(tokey[1:]))
     elif tokey[0] == "-": SubBox(uid,name,int(tokey[1:]))
@@ -77,8 +88,11 @@ def key(name, tokey, uid):
       NewBox(uid,name,int(tokey))
 
 
-def door(uid, name, key="1"):
-  IfTheBox(name,uid)
+def door(uid: int, name: str, key: str ="1")-> bool:
+  '''Checks a variable conditionally according to СССП \n
+  name -) name of var in lairway. ('foo')\n
+  key -) condition (">5")'''
+  IfInBox(name,uid)
   if key=="map":
     return fmap(uid,name)
 
@@ -102,9 +116,17 @@ def door(uid, name, key="1"):
         Behind=True
       else:
         Behind=False
+
+    elif key[0] == "%":
+      bkey=Box(uid, key[2:])
+      if Box(uid,name)%int(bkey)==0:
+        Behind=True
+      else:
+        Behind=False
+      
     else:
       bkey=Box(uid, key[1:])
-      if Box(uid, name) <= int(bkey):
+      if Box(uid, name) == int(bkey):
         Behind=True
       else:
         Behind=False
@@ -121,6 +143,13 @@ def door(uid, name, key="1"):
         Behind=True
       else:
         Behind=False
+
+    elif key[0] == "%":
+      if Box(uid,name)%int(key[1:])==0:
+        Behind=True
+      else:
+        Behind=False
+        
     else:
       if Box(uid, name) == int(key):
         Behind=True
@@ -131,7 +160,8 @@ def door(uid, name, key="1"):
   else:
     return Behind
 
-def fmap(uid, name="",mway=[]):
+def fmap(uid: int, name: str="",mway: list = []) -> bool:
+  '''This function is a complex condition. You can call either a map by *name* and then its complex condition will be checked, or you can enter your own in the form of a list in *mway*.'''
   maprole=True
   if mway==[]:
     mway=maps[name]
@@ -168,13 +198,15 @@ def fmap(uid, name="",mway=[]):
   return (cat and maprole)
 
 
-def say(ad):
+def say(ad:str):
+  '''writes a message to each Lairway user'''
   if ad=="":return
   for citizen in Ids():
-    bot.send_message(citizen[0],ad.replace("|", "\n"))
+    Send(citizen[0],ad.replace("|", "\n"))
 
-def Player(id):
-  SM.New('inf', ['en', 'ru'], [Role(id)+" "+ Name(id)+" aka "+Rname(id)+" or agent "+str(id)+" :",Role(id)+" "+ Name(id)+" он же "+Rname(id)+" или же агент "+str(id)+" :"])
+def Player(id: int) -> str:
+  '''return inf about user in lairway in format'''
+  SM.New('inf', ['en', 'ru'], [Role(id)+" "+ Name(id)+" aka "+Rname(id)+" or agent "+str(id)+" : ",Role(id)+" "+ Name(id)+" он же "+Rname(id)+" или же агент "+str(id)+" : "])
   inf=SM.Mess("inf",lang)
   for bk in BoxAndKeys(id):
     inf +=str(bk[0])+" - "+str(bk[1])+" "
@@ -182,12 +214,18 @@ def Player(id):
   return inf
 
 
-def Inf(id="all", uid = None):
+def Inf(id: str = "all", uid: int = None) -> str:
+  '''Returns information in Lairway Inf format \n
+  id = all -) inf about all lairway users
+  id = big / players -) send users with specified uid inf about each lairway user, for each in its own message and then returns "Lairway BigInf"
+  id = @... -) returns information about the user whose name is specified after @ (ex: "@my_telegram_nick") 
+  id = ... -)  returns information about the user whose id is specified. (ex: "12345678") 
+  ''' 
   try:
     messI = "LairWayINF:\n\n"
     if id == "all":
       idlist = Ids()
-    elif id == 'players':
+    elif id in ('players','big'):
       idlist = Ids()
       for ide in idlist:
         Send(uid, Player(ide[0]))

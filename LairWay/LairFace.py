@@ -1,38 +1,34 @@
 import telebot
 import os
 
-token =  os.environ['token']
+token =  "5950897541:AAFWOfBv5Vha0nLhyGK4vpUw_igNYIxG4bk"
 bot = telebot.TeleBot(token) 
 
-LairFaceV="TG1"
+LairFaceV="TeleBot-1.0"
 biglim=4096
 btlim=64
 
-class Mess:
-  def __init__(self):
-    self.ll = {}
+def Send(uid:str,text:str,kb: telebot.types.ReplyKeyboardMarkup =None) -> telebot.types.Message: return bot.send_message(uid, text=text, reply_markup=kb)
+def Kill(cid: int,mid: int): bot.delete_message(cid,mid)
+def Edit(cid: int,mid: int,text: str,kb=None):bot.edit_message_text(chat_id=cid, message_id=mid, text=text,reply_markup=kb)
+  
+def Foto(uid: int,File,text: str = None): return bot.send_photo(uid, File, caption=text )
+def Doc(uid: int,File,text: str = None): return bot.send_document(uid, File, caption=text)
+def Aud(uid: int,File,text: str = None): return bot.send_audio(uid, File, caption=text)
+def Vid(uid: int,File,text: str = None): return bot.send_video(uid, File, caption=text)
+def Vc(uid: int,File,text: str = None): return bot.send_voice(uid, File, caption=text)
+def Stk(uid: int, stiker_id: str): return bot.send_sticker(uid, stiker_id)
 
-  def New(self, mess_name, langs, mess):
-    self.ll[mess_name] = {}
-    for a in range(len(langs)):
-      self.ll[mess_name][langs[a]] = mess[a]
 
-  def Mess(self, mess_name, lang):
-    try: return self.ll[mess_name][lang]
-    except: return self.ll[mess_name]["en"]
-SM=Mess()
+def Keyboard(width=2) -> telebot.types.InlineKeyboardMarkup: return telebot.types.InlineKeyboardMarkup(row_width=width)
+def NewBt(kb: telebot.types.InlineKeyboardMarkup, text: str, way: str): kb.add(telebot.types.InlineKeyboardButton(text=text,callback_data=way))
 
-def Send(uid,str,kb=None): bot.send_message(uid, text=str, reply_markup=kb)
-def Kill(cid,mid): bot.delete_message(cid,mid)
-def Edit(cid,mid,text,kb=None):bot.edit_message_text(chat_id=cid, message_id=mid, text=text,reply_markup=kb)
-def Foto(uid,l,text=None): return bot.send_photo(uid, l, caption=text )
-def Doc(uid,l,text=None): return bot.send_document(uid, l, caption=text)
 
-def Keyboard(width=2): return telebot.types.InlineKeyboardMarkup(row_width=width)
-def NewBt(kb,text,way): kb.add(telebot.types.InlineKeyboardButton(text=text,callback_data=way))
-
-def Uid(message): return message.from_user.id 
-def Mtx(message): return message.text
-def Mid(message): 
+def Uid(message: telebot.types.Message) -> int: return message.from_user.id 
+def CUid(call: telebot.types.CallbackQuery) -> int: return call.from_user.id
+def CallBack(call: telebot.types.CallbackQuery) -> str: return call.data
+def Mtx(message: telebot.types.Message) -> str: '''return message text'''; return message.text
+def Mid(message: telebot.types.Message) -> int: 
+  '''return message id.'''
   try: return message.message.id
   except: return message.message_id

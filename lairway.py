@@ -4,7 +4,7 @@ from MyLairWay import *
 
 
 def Lairway(f,message, tp=0, new = 1):
-  #gasanbek(f=f,message=message, tp=tp, new = new)
+  #gasanbek(f=f,message=message, tp=tp, new = new); return
   try:
     gasanbek(f=f,message=message, tp=tp, new = new)
   except Exception as e:
@@ -13,15 +13,10 @@ def Lairway(f,message, tp=0, new = 1):
 
 
 
-LairWayV="0.16 (GodOfEyes II)"
+LairWayV="0.17-(Lord-of-flies)"
 
 
-text = {}
-bttn = {}
-img = {}
-maps={}
-spell={}
-spl=[]
+
 
 
 phrase = [
@@ -31,43 +26,29 @@ phrase = [
 
 starter = ["1",None]
 Size=[None,None,None]
+CallSave={}
 
 
-SM = Mess()
-
-
-lang="en"
-
-
-def gasanbek(f, message, tp=0, new = 1):
+def gasanbek(f: str,
+  message: telebot.types.Message, tp: int=0, new: int = 1):
+  
   uid = Uid(message)
   mid=Mid(message)
-
-    
-
-  SM.New('TxNE', ['en', 'ru'], ["Error:\nText "+str(f)+" does not exist.", "Error 1:\nТекста "+str(f)+" не существует."])
-  SM.New('TxL', ['en', 'ru'], 
-      ["Error 2:\nText "+str(f)+" Too big or small. Restriction - must be at least 1 character and no more than "+str(biglim), 
-      "Error 2:\nТекст "+str(f)+" Cлишком большой или маленький. Ограничение - должен быть минимум 1 симврол и не больше чем "+str(biglim)])
-
-  
-
-
   if not f in text:
-    Send(uid,SM.Mess("TxNE",lang))
+    Send(uid,SM.MessArg("TxNE",lang,str(f)))
     return "No_TX"
   if not(len(text[f][0]) > 0 and len(text[f][0]) < biglim):
-    Send(uid,SM.Mess("TxL",lang))
+    Send(uid,SM.MessArg("TxL",lang,str(f),str(biglim)))
     return
+  
 
   kb=Keyboard()
-  
+  KillFlies(uid)
   if new==1:
     NewFotoId(uid)
     clear(uid)
 
   if tp!=0:  NewBt(kb,"tp",tp)
-
   if new != 1 and not (BlockId(uid) == mid):
     Edit(uid,mid,phrase[1])
     return
@@ -82,6 +63,7 @@ def gasanbek(f, message, tp=0, new = 1):
 
 
   #Удаление изображений
+    
   if len(str(FotoId(uid))) != 0:
     fotoid = FotoId(uid)[1:]
     icount = fotoid.split("@")
@@ -89,22 +71,9 @@ def gasanbek(f, message, tp=0, new = 1):
       Kill(uid, int(imgid))
     NewFotoId(uid)
 
-  for i in range(1, len(text[f])):
-    SM.New("Empty", ['en','ru'], ["Error 3:\nYou are trying to use an empty button/image after the text.","Error 3:\n Вы пытаетесь использовать пустую кнопку/картинку после текста."])
-    SM.New("ImgE", ['en','ru'], ["Error 4:\nThe picture does not exist, but it is listed after the text.",
-                                "Error 4:\nКартинки не существует, но она указана после текста."])
-    SM.New("BtE", ['en','ru'], ["Error 5:\nThe button does not exist, but it is indicated after the text.",
-                        "Error 5:\nКнопки не существует, но она указана после текста."])
-    SM.New("BtL", ['en','ru'], 
-           ["Error 6:\nThe button does not comply with the length rules, which state that it must be greater than 0 and less than characters.","Error 6:\nКнопка не соответствует правилам длины, которые гласят, что тот должен быть больше 0 и меньше символов."])
-    SM.New("BtM", ['en','ru'], 
-       ["Error 7:\n For the button not enough parameters were specified, the number, text, and text it leads to are required.","Error 7:\nДля кнопки указали недостаточно параментров, требуться номер, текст, текст в который она ведет."])
-    SM.New("SE", ['en','ru'], 
-       ["Error 8:\nThe button has incorrect syntax.", "Error 8:\nКнопка имеет не правильный синтаксис."])
-    
+    #обработка кнопок
 
-    
-  
+  for i in range(1, len(text[f])):
     
     if text[f][i] == "":
       Send(uid,SM.Mess("Empty",lang) )
@@ -113,36 +82,38 @@ def gasanbek(f, message, tp=0, new = 1):
       try:Kill(uid, mid)
       except:Edit(uid, mid,"):")
       return
-
+    #LWIS2+
     if text[f][i][0] == "@": 
       if text[f][i][1:] not in img:
-        Send(uid,SM.Mess("ImgE",lang) )
+        Send(uid,SM.MessArg("ImgE",lang,text[f][i][1:]) )
         continue
       imgway = img[text[f][i][1:]]
-      l = open(imgway[1], "rb")
+      if not imgway[0] in ("stk"): l = open(imgway[1], "rb")
+      else: l=imgway[1]
       if len(imgway) == 2:
         file = File(uid, imgway[0] ,l)
+      #кнопки
       else:
         if not (len(imgway[2]) > 0 and len(imgway[2]) < biglim):
-          Send(uid,SM.Mess("TxL",lang))
+          Send(uid,SM.MessArg("TxL",lang,f,biglim))
           return
         file = File(uid, imgway[0], l, text=RLW(imgway[2],uid))
       AddFotoId(uid,file)
-      l.close()
+      if not imgway[0] in ("stk"): l.close()
     else:    
 
       if text[f][i] not in bttn:
-        Send(uid,SM.Mess("BtE",lang) )
+        Send(uid,SM.MessArg("BtE",lang,text[f][i]) )
         continue
       way = bttn[text[f][i]]
       if not(len(way[0]) > 0 and len(way[0]) < btlim):
-        Send(uid,SM.Mess("BtL",lang) )
+        Send(uid,SM.MessArg("BtL",lang,text[f][i],btlim) )
         continue
       try:
         if len(way) == 2:
           NewBt(kb,way[0],way[1])
         elif len(way)<2:
-          Send(uid,SM.Mess("BtM",lang) )
+          Send(uid,SM.MessArg("BtM",lang,text[f][i]) )
           continue
 
 
@@ -237,11 +208,11 @@ def gasanbek(f, message, tp=0, new = 1):
           ways= []
           if way[1]=="@":
              for a in range((len(way[3:]) // 3)):
-              IfTheBox(way[4 + a * 3],uid)
+              IfInBox(way[4 + a * 3],uid)
               ways.append([Box(uid, way[4 + a * 3])] + [way[5 + a * 3]] +[ way[6 + a * 3]])
           else:
             for a in range((len(way[3:]) // 2)):
-              IfTheBox(way[4 + a * 2],uid)
+              IfInBox(way[4 + a * 2],uid)
               ways.append([Box(uid, way[4 + a * 3])] + [way[5 + a * 2]])
               
           ways.sort(key=lambda x: x[0])
@@ -261,7 +232,7 @@ def gasanbek(f, message, tp=0, new = 1):
               NewBt(kb, waytext, ways[wayslen//2][1])
         elif way[2] == "s":
           Save(uid)
-          conn.commit()
+      
           if way[1]!="":
             NewBt(kb,way[0],way[1])
 
@@ -289,7 +260,7 @@ def gasanbek(f, message, tp=0, new = 1):
   if new == 1:
     forblockid=mid+1
     if len(str(FotoId(uid))) != 0:
-      forblockid-=len(FotoId(uid).split("@")) - 3
+      forblockid+=len(FotoId(uid).split("@"))-1
     BlockIdIs(forblockid,uid,)
     sphr=""
     if f==starter[0]: sphr= SM.Mess("LW",lang)
@@ -297,14 +268,14 @@ def gasanbek(f, message, tp=0, new = 1):
   else:
     Edit(uid, mid, RLW(text[f][0],uid), kb)
 
-SM.New('LW', ['en', 'ru'], ["Created using LairWay. Good game!\n","Создано при использововании LairWay. Удачной игры!\n "])
-SM.New('RKE', ['en', 'ru'], ["ERROR 1R : Syntax error. Required @?key/?/needkey/?/text1/?/text2, where key is the name of the variable and needkey is the key of the desired value of the variable, text1 is the text if the condition is true, text2 is the text if the condition is true lie","ERROR: Ошибка синтаксиса. Требуеться @?key/?/needkey/?/text1/?/text2, где key - название переменной а needkey - ключ нужного значения переменной, text1 - текст если условине - истино, text2 - текст если условие - ложь"])
-SM.New('RSE', ['en', 'ru'], ["ERROR 2R: Door syntax error inside '@?'","ERROR 2R: Ошибка синтаксиса door внутри '@?'"])
-SM.New('P', ['en', 'ru'], ["Error 0: Some minor problem. I'll try again after some time.","Error 0: Какая-то небольшая проблема. Попробуйье еще раз через какое-то время."])
 
 def File(uid,typ,the_file,text=None):
   if typ=="img": return Foto(uid, the_file, text=text)
   elif typ=="doc": return Doc(uid,the_file, text=text)
+  elif typ=="vid": return Vid(uid,the_file, text=text)
+  elif typ=="aud": return Aud(uid,the_file, text=text)
+  elif typ=="vc": return Vc(uid,the_file, text=text)
+  elif typ=="stk": return Stk(uid,the_file)
 
 def RLW(text,uid):
   text = text.replace("|", "\n")
@@ -345,7 +316,7 @@ def RLW(text,uid):
            
       elif k[0]=="*":
         Fpart=k[1:].split("/*/")
-        part+=globals()["F_"+Fpart[0]](uid,*tuple(Fpart[1:]))
+        part+=str(globals()["F_"+Fpart[0]](uid,*tuple(Fpart[1:])))
       else:
         part += k
     text=part
@@ -396,6 +367,7 @@ def LWR(game):
               genway="QuickBttn№"+str(gencount)
               text[gg[1]].append(genway)
               bttn[genway]=[gg[i],gg[i-1]]  
+              
           elif gg[0] == "img":
             img[gg[1]] = ["img"]
             for i in range(2, len(gg)):
@@ -404,13 +376,33 @@ def LWR(game):
             img[gg[1]] = ["doc"]
             for i in range(2, len(gg)):
               img[gg[1]].append(gg[i])
+          elif gg[0] == "vid":
+            img[gg[1]] = ["vid"]
+            for i in range(2, len(gg)):
+              img[gg[1]].append(gg[i])
+          elif gg[0] == "aud":
+            img[gg[1]] = ["aud"]
+            for i in range(2, len(gg)):
+              img[gg[1]].append(gg[i])
+          elif gg[0] == "vc":
+            img[gg[1]] = ["vc"]
+            for i in range(2, len(gg)):
+              img[gg[1]].append(gg[i])
+          elif gg[0] == "stk":
+            img[gg[1]] = ["stk"]
+            for i in range(2, len(gg)):
+              img[gg[1]].append(gg[i])
+     
+  
+
+
+        
           elif gg[0] == "map":
             maps[gg[1]] = []
             for i in range(2, len(gg)):
               maps[gg[1]].append(gg[i])
           elif gg[0] in ("spell","spl"):
             spell[gg[1]] = []
-            spl.append(gg[1])
             for i in range(2, len(gg)):
               spell[gg[1]].append(gg[i])
               
