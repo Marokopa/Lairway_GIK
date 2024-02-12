@@ -1,7 +1,7 @@
 import telebot
 import os
 
-token =  "5950897541:AAFWOfBv5Vha0nLhyGK4vpUw_igNYIxG4bk"
+token =  "5094636386:AAEmffF2FhQjeJmp3fSBMgUsh1_PyaYqJ_8"
 bot = telebot.TeleBot(token) 
 
 LairFaceV="TeleBot-1.0"
