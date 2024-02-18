@@ -16,7 +16,7 @@ def IfInUsInf(uid: int, message):
 def IfInBox(name, uid):
   if (uid, name) in cur.execute("SELECT id,box FROM box").fetchall(): return
   if name[0]=="@": cur.execute("INSERT OR IGNORE INTO box VALUES (?, ?, 0, 'NO','@')", (uid,name));conn.commit()
-  elif name[0]=="%": cur.execute("INSERT OR IGNORE INTO box VALUES (?, ?, 0, 'NO','fly')", (uid,name));conn.commit()
+  elif name[0]=="%": cur.execute("INSERT OR IGNORE INTO box VALUES (?, ?, 0, '0','fly')", (uid,name));conn.commit()
   else:cur.execute("INSERT OR IGNORE INTO box VALUES (?, ?, 0, 0,'')", (uid,name));conn.commit()
 
 def bye(rez, who='',box=""):
@@ -51,11 +51,12 @@ def AddFotoId(uid: int ,foto): cur.execute("UPDATE UsInf SET fotoid = ? WHERE id
 def BlockIdIs(fbi,uid: int): cur.execute("UPDATE UsInf SET Blockid = ? WHERE (id) = (?)",(fbi,uid,))
 
 
+def WithRole(role: str) -> list[tuple[str]]: return cur.execute("SELECT name FROM UsInf WHERE role = ?", (role,)).fetchall()
 def Ids() -> list[tuple[int]]:'''returns the ids of all Lauway users'''; return cur.execute("SELECT id FROM UsInf").fetchall()
 def BoxAndKeys(uid: int) -> list[tuple[str,int]]: '''returns all variables of a given user and their values'''; return cur.execute("SELECT box, key FROM box WHERE id = ?", (uid, )).fetchall()
 
-def Save(uid: int):'''Remembers all variables of a given user at a given time'''; cur.execute("UPDATE box SET skey = key WHERE (mod,id) = ('',?)", (uid, ))
-def Load(uid: int):'''Loads the last filled value into variables'''; cur.execute("UPDATE box SET key = skey WHERE (mod,id) = ('',?)", (uid, ))
+def Save(uid: int):'''Remembers all variables of a given user at a given time'''; cur.execute("UPDATE box SET skey = key WHERE (mod,id) IN (('',?), ('fly',?))", (uid, uid ))
+def Load(uid: int):'''Loads the last filled value into variables'''; cur.execute("UPDATE box SET key = skey WHERE (mod,id) IN (('',?), ('fly',?))", (uid,uid ))
   
 
 
@@ -75,6 +76,9 @@ def Who(name: str) -> int: '''takes the username as input and returns the user I
 def Name(uid: int) -> str: '''return name of user. ex: "nick_in_telegram"'''; return cur.execute("SELECT name FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
 def Role(uid: int) -> str: '''return role of user. ex: "lord"''';return cur.execute("SELECT role FROM UsInf WHERE (id) = (?)",(uid,)).fetchall()[0][0]
 def Rname(uid: int) -> str: '''return Real_Name of user. ex: "Akakiy Akakivich"''';return cur.execute("SELECT rname FROM UsInf WHERE (id) = (?)",(uid, )).fetchall()[0][0] 
+import sqlite3
+
+
 
 
 def Box(uid: int,boxname:str)-> int: '''Return value of box.'''; return cur.execute("SELECT key FROM box WHERE (id, box) = (?, ?)",(uid, boxname)).fetchall()[0][0]
@@ -84,6 +88,13 @@ def NewBox(uid: int, box: str ,key: int ): '''box = key'''; cur.execute("UPDATE 
 def AddBox(uid: int, box: str ,key: int ): '''box = box+key''';  cur.execute("UPDATE box SET key = key+? WHERE (id,box) = (?,?)",(key,uid,box))
 def SubBox(uid: int, box: str ,key: int ): '''box = box-key''';  cur.execute("UPDATE box SET key = key-? WHERE (id,box) = (?,?)",(key,uid,box))
 def MulBox(uid: int, box: str ,key: int ): '''box = box*key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)*key,uid,box))
-def DivBox(uid: int, box: str ,key: int ): '''box = box//key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)//key,uid,box))
-def ModBox(uid: int, box: str ,key: int ): '''box = box%key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)%key,uid,box))
 def PowBox(uid: int, box: str ,key: int ): '''box = box**key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)**key,uid,box))
+def DivBox(uid: int, box: str ,key: int ):
+  '''box = box//key'''
+  try: cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)//key,uid,box))
+  except: NewBox(uid, box, 0)
+def ModBox(uid: int, box: str ,key: int ): 
+  '''box = box%key'''
+  try: cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)%key,uid,box))
+  except: NewBox(uid, box, 0)
+

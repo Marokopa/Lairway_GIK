@@ -1,7 +1,7 @@
 import telebot
 import os
 
-token =  "5094636386:AAEmffF2FhQjeJmp3fSBMgUsh1_PyaYqJ_8"
+token = os.environ['token']
 bot = telebot.TeleBot(token) 
 
 LairFaceV="TeleBot-1.0"
@@ -23,12 +23,14 @@ def Stk(uid: int, stiker_id: str): return bot.send_sticker(uid, stiker_id)
 def Keyboard(width=2) -> telebot.types.InlineKeyboardMarkup: return telebot.types.InlineKeyboardMarkup(row_width=width)
 def NewBt(kb: telebot.types.InlineKeyboardMarkup, text: str, way: str): kb.add(telebot.types.InlineKeyboardButton(text=text,callback_data=way))
 
-
 def Uid(message: telebot.types.Message) -> int: return message.from_user.id 
 def CUid(call: telebot.types.CallbackQuery) -> int: return call.from_user.id
 def CallBack(call: telebot.types.CallbackQuery) -> str: return call.data
+def StkIdBack(message: telebot.types.Message) -> str: return message.sticker.file_id
 def Mtx(message: telebot.types.Message) -> str: '''return message text'''; return message.text
 def Mid(message: telebot.types.Message) -> int: 
   '''return message id.'''
   try: return message.message.id
   except: return message.message_id
+
+def StartLairWay(bot): bot.polling()

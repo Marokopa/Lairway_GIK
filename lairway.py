@@ -11,13 +11,7 @@ def Lairway(f,message, tp=0, new = 1):
     print(e)
     Send(message.from_user.id,SM.Mess("P",lang) )
 
-
-
-LairWayV="0.17-(Lord-of-flies)"
-
-
-
-
+LairWayV="0.18[VexMole]"
 
 phrase = [
   "Welcome to the game made on the basis of the Lairway TB engine. To start, click on /start",
@@ -27,10 +21,13 @@ phrase = [
 starter = ["1",None]
 Size=[None,None,None]
 CallSave={}
+gencount=[0]
 
 
-def gasanbek(f: str,
-  message: telebot.types.Message, tp: int=0, new: int = 1):
+
+
+
+def gasanbek(f: str,message: telebot.types.Message, tp: int=0, new: int = 1):
   
   uid = Uid(message)
   mid=Mid(message)
@@ -40,7 +37,6 @@ def gasanbek(f: str,
   if not(len(text[f][0]) > 0 and len(text[f][0]) < biglim):
     Send(uid,SM.MessArg("TxL",lang,str(f),str(biglim)))
     return
-  
 
   kb=Keyboard()
   KillFlies(uid)
@@ -88,7 +84,7 @@ def gasanbek(f: str,
         Send(uid,SM.MessArg("ImgE",lang,text[f][i][1:]) )
         continue
       imgway = img[text[f][i][1:]]
-      if not imgway[0] in ("stk"): l = open(imgway[1], "rb")
+      if not imgway[0] in ("stk"): l = open("GameFiles/"+imgway[1], "rb")
       else: l=imgway[1]
       if len(imgway) == 2:
         file = File(uid, imgway[0] ,l)
@@ -115,8 +111,6 @@ def gasanbek(f: str,
         elif len(way)<2:
           Send(uid,SM.MessArg("BtM",lang,text[f][i]) )
           continue
-
-
 
         #Тип кнопки k. Позволяет создавать переменные и давать им значения
         elif way[2] == "k":
@@ -323,114 +317,156 @@ def RLW(text,uid):
 
   return text
 
+def LWLang(element_type,name=None):
+  Vex=SM.MessArg("NoElType", lang , element_type)
+  if element_type in ("button","bttn","bt","b","fbt"):
+    Vex="bt~"+name
+    for part in bttn[name]: Vex+="~"+part
+  elif element_type in ("text","tx","qw","t"):
+    Vex="tx~"+name
+    for part in text[name]: Vex+="~"+part
+  elif element_type in ("+","img","vc","vid","aud","stk"):
+    Vex=img[name][0]+"~"+name
+    for part in img[name][1:]: Vex+="~"+part
+  elif element_type in ("spell","spl","sp","s"):
+    Vex="spell~"+name
+    for part in spell[name]: Vex+="~"+part
+  elif element_type in ("mod","m"):
+    try: Vex="mod~"+starter[0]+"~"+lang+"~"+starter[1]
+    except: Vex="mod~"+starter[0]+"~"+lang
+  elif element_type in ("ph","p","phrase"):
+    Vex="phrase~"+phrase[0]+"~"+phrase[1]
+  return Vex+"\n"
+
+def Remove(element_type, name):
+    if element_type in ("text","tx","qw","t"):
+        del text[name]
+    elif element_type in ("button","bttn","bt","b","fbt"):
+        del bttn[name]
+    elif element_type in ("+","img","vc","vid","aud","stk"):
+        del img[name]
+    if element_type in ("spell","spl","sp","s"):
+        del spell[name]
+      
+def VexMole():
+  with open("VexMole.lairway","w") as vm:
+    vm.write(LWLang("mod"))
+    vm.write(LWLang("ph"))
+    for worm in text: vm.write(LWLang("tx",worm)) 
+    for worm in bttn: vm.write(LWLang("bt",worm)) 
+    for worm in img: vm.write(LWLang("+", worm)) 
+      
+  
+
 
 
 def LairWayRead():
   RoleClear()
-  if os.path.exists("cat.lairway"):
-    with open("cat.lairway", 'r', encoding='utf-8') as cnt:
-      first=cnt.readlines()
-      for f in first[0].strip().split():
-        LWR(f+".lairway")
-  else:
-    LWR("Game.lairway")
+  Games=[]
+  with open("cat.LWCore", 'r', encoding='utf-8') as cnt:
+    for line in cnt.readlines():
+      corel=line.strip().split("~")
+      if corel[0].lower() == "game":
+        for Name in corel[1:]:
+          Games.append(Name)
+      elif corel[0].lower() == "role":
+        for lord in corel[1:]:
+          if lord[0]=="@":
+            NewRole('lord',lord[1:])
+          elif lord[0]=="#":
+            NewRole('herceg',lord[1:])
+          else:
+            NewRole('wanderer',lord[1:])
+  for Game in Games: ReadGame(Game+".lairway")
+        
+def LWCore(Games):
+  with open("cat.LWCore","w") as core:
+    Gm="game"
+    for Game in Games: Gm+="~"+Game
+    core.write(Gm+"\n")
+    Them="role"
+    for some in WithRole("lord"): Them+="~@"+some[0]
+    for some in WithRole("herceg"): Them+="~#"+some[0]
+    for some in WithRole("wanderer"): Them+="~"+some[0]
+    core.write(Them+"\n")
 
-def LWR(game):
-  global lang
+
+def ReadGame(game):
+  bttn, text, img, spell = {},{},{}, {}
+  gencount=[0]
   Size=[None,None,None]
   try:
-    gencount=0
-    with open(game, 'r', encoding='utf-8') as f:
-      a = f.readlines()
-      for line in a:
-          gg = line.strip().split("~")
-          if gg[0] == "tx":
-            text[gg[1]] = []
-            for i in range(2, len(gg)):
-              text[gg[1]].append(gg[i])
-          elif gg[0] =="bt":
-            bttn[gg[1]] = []
-            for i in range(2, len(gg)):
-              bttn[gg[1]].append(gg[i])
-          elif gg[0] == "fbt":
-            bttn[gg[1]] = [gg[2],gg[1]]
-            for i in range(3, len(gg)):
-              bttn[gg[1]].append(gg[i])
-          elif gg[0] == "key":
-            bttn[gg[1]] = ["None","","k"]
-            for i in range(2, len(gg)):
-              bttn[gg[1]].append(gg[i])
-          elif gg[0]=="qk":
-            text[gg[1]] = [gg[2]]
-            for i in range(4, len(gg),2):
-              gencount+=1
-              genway="QuickBttn№"+str(gencount)
-              text[gg[1]].append(genway)
-              bttn[genway]=[gg[i],gg[i-1]]  
-              
-          elif gg[0] == "img":
-            img[gg[1]] = ["img"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-          elif gg[0] == "doc":
-            img[gg[1]] = ["doc"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-          elif gg[0] == "vid":
-            img[gg[1]] = ["vid"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-          elif gg[0] == "aud":
-            img[gg[1]] = ["aud"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-          elif gg[0] == "vc":
-            img[gg[1]] = ["vc"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-          elif gg[0] == "stk":
-            img[gg[1]] = ["stk"]
-            for i in range(2, len(gg)):
-              img[gg[1]].append(gg[i])
-     
-  
-
-
-        
-          elif gg[0] == "map":
-            maps[gg[1]] = []
-            for i in range(2, len(gg)):
-              maps[gg[1]].append(gg[i])
-          elif gg[0] in ("spell","spl"):
-            spell[gg[1]] = []
-            for i in range(2, len(gg)):
-              spell[gg[1]].append(gg[i])
-              
-          elif gg[0]=="mod":
-            if len(gg)>1:  starter[0] = gg[1]
-            if len(gg)>2: lang = gg[2]
-            if len(gg)>3: starter[1] = gg[3]
-            
-
-          elif gg[0] == "ph":
-            if len(gg)>1:phrase[0] = gg[1]
-            if len(gg)>2:phrase[1] = gg[2]
-
-          elif gg[0] == "role":
-            for lord in gg[1:]:
-              if lord[0]=="@":
-                NewRole('lord',lord[1:])
-              elif lord[0]=="#":
-                NewRole('herceg',lord[1:])
-              else:
-                NewRole('wanderer',lord[1:])
+    with open(game, 'r', encoding='utf-8') as LWRST:
+      for line in LWRST.readlines(): LWR(line)
   except Exception as err:
       print(f"ERROR!:\n.Reading file {game} - \nError {err}")
 
-
-
-
+def LWR(line):
+  global lang
+  gg = line.strip().split("~")
+  if gg[0] == "tx":
+    text[gg[1]] = []
+    for i in range(2, len(gg)):
+      text[gg[1]].append(gg[i])
+  elif gg[0] =="bt":
+    bttn[gg[1]] = []
+    for i in range(2, len(gg)):
+      bttn[gg[1]].append(gg[i])
+  elif gg[0] == "fbt":
+    bttn[gg[1]] = [gg[2],gg[1]]
+    for i in range(3, len(gg)):
+      bttn[gg[1]].append(gg[i])
+  elif gg[0] == "key":
+    bttn[gg[1]] = ["None","","k"]
+    for i in range(2, len(gg)):
+      bttn[gg[1]].append(gg[i])
+  elif gg[0]=="qk":
+    text[gg[1]] = [gg[2]]
+    for i in range(4, len(gg),2):
+      gencount[0]+=1
+      genway="QuickBttn№"+str(gencount)
+      text[gg[1]].append(genway)
+      bttn[genway]=[gg[i],gg[i-1]]  
+  elif gg[0] == "img":
+    img[gg[1]] = ["img"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "doc":
+    img[gg[1]] = ["doc"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "vid":
+    img[gg[1]] = ["vid"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "aud":
+    img[gg[1]] = ["aud"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "vc":
+    img[gg[1]] = ["vc"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "stk":
+    img[gg[1]] = ["stk"]
+    for i in range(2, len(gg)):
+      img[gg[1]].append(gg[i])
+  elif gg[0] == "map":
+    maps[gg[1]] = []
+    for i in range(2, len(gg)):
+      maps[gg[1]].append(gg[i])
+  elif gg[0] in ("spell","spl"):
+    spell[gg[1]] = []
+    for i in range(2, len(gg)):
+      spell[gg[1]].append(gg[i])
+  
+  elif gg[0]=="mod":
+    if len(gg)>1:  starter[0] = gg[1]
+    if len(gg)>2: lang = gg[2]
+    if len(gg)>3: starter[1] = gg[3]
+  elif gg[0] == "ph":
+    if len(gg)>1:phrase[0] = gg[1]
+    if len(gg)>2:phrase[1] = gg[2]
+  
 LairWayRead()
-
-
 

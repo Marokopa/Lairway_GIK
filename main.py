@@ -16,7 +16,9 @@ def самостоятельный(call):
 @bot.message_handler(commands=['lairway', 'LairWay','engine','about'])
 def LairWayAbout_Command(message):
   IfInUsInf(Uid(message), message)
+  Stk(Uid(message), "CAACAgIAAxkBAAI_tmXSD6QM_0HsmezGLocnDHEve6N9AAJeRQACrsWRSr4jS-FSYIJwNAQ")
   Send(Uid(message),SM.MessArg("LairWay",lang,LairWayV,LairFaceV,LairBoxV,LairEyeV,str(len(Ids()))))
+  
 
 
 #Считывает файл сюжета игры
@@ -99,6 +101,49 @@ def Inf_Command(message):
   else:
     Send(Uid(message), SM.Mess("NoRole",lang))
 
+@bot.message_handler(commands=['Add','add'])
+def Add_Command(message):
+  if role(Uid(message),"lord"):
+    try:
+      LWR(Mtx(message)[4:])
+      Send(Uid(message), SM.Mess("Add+",lang))
+    except:
+      Send(Uid(message), SM.Mess("AddError",lang))
+  else:Send(Uid(message), SM.Mess("NoRole",lang))
+
+@bot.message_handler(commands=['Show','show'])
+def Show_Command(message):
+  if role(Uid(message),"lord"):
+    try:
+      qw=Mtx(message).split()
+      try: Send(Uid(message), LWLang(qw[1],qw[2].replace("~"," ")))
+      except: Send(Uid(message), LWLang(qw[1],None))
+    except:
+      Send(Uid(message), SM.Mess("ShowError",lang))
+  else:Send(Uid(message), SM.Mess("NoRole",lang))
+
+@bot.message_handler(commands=['Remove','remove'])
+def Remove_Command(message):
+  if role(Uid(message),"lord"):
+    try:
+      qw=Mtx(message).split()
+      Remove(qw[1],qw[2].replace("~"," "))
+      Send(Uid(message), SM.Mess("Remove",lang))
+    except: Send(Uid(message), SM.Mess("RemoveError",lang))
+  else:Send(Uid(message), SM.Mess("NoRole",lang))
+
+@bot.message_handler(commands=['Create','create'])
+def Create_Command(message):
+  if role(Uid(message),"lord"):
+    try:
+       Ctx=Mtx(message).split()
+       if len(Ctx)>1: LWCore(Ctx[1:])
+       else: VexMole()
+       Send(Uid(message), SM.Mess("Create",lang))
+    except: Send(Uid(message), SM.Mess("CreateError",lang))
+  else:Send(Uid(message), SM.Mess("NoRole",lang))
+
+
 
 
 
@@ -107,19 +152,24 @@ def FileRead_Command(message):
   if role(Uid(message),"lord"):
     try:
       bttn,text={},{}
-      LWR(message.text[6:]+".lairway")
+      ReadGame(message.text[6:]+".lairway")
       Send(Uid(message), SM.Mess("FO",lang))
     except:
       Send(Uid(message), SM.Mess("FE",lang))
   else:
     Send(Uid(message), SM.Mess("NoRole",lang))
 
-@bot.message_handler(commands=['save','Save',"GHS","gts","sql"])
+@bot.message_handler(commands=['save','Save',"GHS","gts"])
 def GitHubSave_Command(message):
   if role(Uid(message),"h"):
-    if GHS():
+    file=Mtx(message).split()[1]
+    try:
+      if file.lower() in ("sql", 'db', 'data'): GHS("LW.db")
+      elif file.lower() in ("vexmole"): GHS("VexMole")
+      elif file.lower() in ("core","cat"): GHS("cat.LWCore")
+      else:GHS(file)
       Send(Uid(message), SM.Mess('save',lang))
-    else: 
+    except: 
       Send(Uid(message), SM.Mess("save_error",lang))
   else:
     Send(Uid(message), SM.Mess("NoRole",lang))
@@ -210,7 +260,7 @@ def Spell(message):
 
 @bot.message_handler(content_types=['sticker'])
 def Stick_Command(message):
-  if phrase[0]!="":Send(Uid(message), RLW(phrase[0], Uid(message)))
+  Send(Uid(message),StkIdBack(message))
   
 LWLS()
-bot.polling(none_stop=True, timeout=123)
+StartLairWay(bot)

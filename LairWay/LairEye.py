@@ -22,19 +22,24 @@ def LWLS():
   Git.start()
 
 
-def GHS():
-    g = Github(os.environ['GitHub'])
-    repo = g.get_repo(os.environ['path'])
-    with open("LW.db", "rb") as file:
-        content = file.read()
-    old_file = repo.get_contents("LW.db")
-    repo.update_file(old_file.path, "commit message", content, old_file.sha)
-    g.close()
-    print("Save successful/Сохранение удачно");return True
-    print("Save failed/Сохранение неудачно");return False
+
 
 def GitWay():
   while True:
     sleep(60*60*24)
-    GHS()
+    GHS('LW.db')
 
+
+def GHS(file_name):
+  print("\nLairWay Save to GitHub...\n")
+  g = Github(os.environ['GitHub'])
+  repo = g.get_repo(os.environ['path'])
+  with open(file_name, "rb") as file: content = file.read()
+  try:
+      old_file = repo.get_contents(file_name)
+      repo.update_file(old_file.path, "LairWay-U", content, old_file.sha)
+  except:
+      repo.create_file(file_name, "LairWay-C", content)
+
+
+  
