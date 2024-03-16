@@ -1,4 +1,13 @@
+import subprocess
+
+packages = "flask telebot pysqlite3-binary PyGithub".split()
+
+for package in packages:
+  subprocess.check_call(['pip', 'install', package])
+
+
 from lairway import *
+
 
 
 @bot.message_handler(commands=['start','go','run','game'])
@@ -162,8 +171,8 @@ def FileRead_Command(message):
 @bot.message_handler(commands=['save','Save',"GHS","gts"])
 def GitHubSave_Command(message):
   if role(Uid(message),"h"):
-    file=Mtx(message).split()[1]
     try:
+      file=Mtx(message).split()[1]
       if file.lower() in ("sql", 'db', 'data'): GHS("LW.db")
       elif file.lower() in ("vexmole"): GHS("VexMole")
       elif file.lower() in ("core","cat"): GHS("cat.LWCore")

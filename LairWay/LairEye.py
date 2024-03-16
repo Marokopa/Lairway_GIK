@@ -31,15 +31,18 @@ def GitWay():
 
 
 def GHS(file_name):
-  print("\nLairWay Save to GitHub...\n")
-  g = Github(os.environ['GitHub'])
-  repo = g.get_repo(os.environ['path'])
-  with open(file_name, "rb") as file: content = file.read()
   try:
-      old_file = repo.get_contents(file_name)
-      repo.update_file(old_file.path, "LairWay-U", content, old_file.sha)
+    print("\nLairWay Save to GitHub...\n")
+    g = Github(os.environ['GitHub'])
+    repo = g.get_repo(os.environ['path'])
+    with open(file_name, "rb") as file: content = file.read()
+    try:
+        old_file = repo.get_contents(file_name)
+        repo.update_file(old_file.path, "LairWay-U", content, old_file.sha)
+    except:
+        repo.create_file(file_name, "LairWay-C", content)
   except:
-      repo.create_file(file_name, "LairWay-C", content)
+      print("Some GHS Error!")
 
 
   

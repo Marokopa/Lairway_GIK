@@ -25,7 +25,7 @@ class Mess:
 
 SM=Mess()
 
-SM.New("LairWay",["en","ru"],["Welcome to the Lairway TB engine. \n Developers: catman (great and main), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nCommunication - LairWay Bot@gmail.com \n\n Lairway version - /SEA/\n LairWaySysV_/SEA/_/SEA/_/SEA/\n\nThe number of users of this bot is /SEA/\nHave a nice game!","Вас приветствует ТБ-движек Lairway. \nРазработчики: catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nСвязь - LairWayBot@gmail.com \n\nВерсия Lairway - /SEA/\n LairWaySysV_/SEA_/SEA/_/SEA/\n\nКоличество пользоватлей этого бота - /SEA/\nПриятной игры!"])
+SM.New("LairWay",["en","ru"],["Welcome to the Lairway TB engine. \n Developers: catman (great and main), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nCommunication - LairWay Bot@gmail.com \n\n Lairway version - /SEA/\n LairWaySysV_/SEA/_/SEA/_/SEA/\n\nThe number of users of this bot is /SEA/\nHave a nice game!","Вас приветствует ТБ-движек Lairway. \nРазработчики: catman(великий и главный), Ⰳⰰⱄⰰⱀⰱⰵⰽ ან ბრწყინვალე ഹസൻബെക് \nСвязь - LairWayBot@gmail.com \n\nВерсия Lairway - /SEA/\n LairWaySysV_/SEA/_/SEA/_/SEA/\n\nКоличество пользоватлей этого бота - /SEA/\nПриятной игры!"])
 
 
 SM.New('LW', ['en', 'ru'], ["Created using LairWay. Good game!\n","Создано при использововании LairWay. Удачной игры!\n "])
