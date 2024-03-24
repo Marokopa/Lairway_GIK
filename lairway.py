@@ -11,7 +11,7 @@ def Lairway(f,message, tp=0, new = 1):
     print(e)
     Send(message.from_user.id,SM.Mess("P",lang) )
 
-LairWayV="0.18.1[VexMole]"
+LairWayV="0.18.2[VexMole]"
 
 phrase = [
   "Welcome to the game made on the basis of the Lairway TB engine. To start, click on /start",

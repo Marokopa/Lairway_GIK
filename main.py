@@ -1,13 +1,5 @@
-import subprocess
-
-packages = "flask telebot pysqlite3-binary PyGithub".split()
-
-for package in packages:
-  subprocess.check_call(['pip', 'install', package])
-
-
 from lairway import *
-
+import atexit
 
 
 @bot.message_handler(commands=['start','go','run','game'])
@@ -270,6 +262,15 @@ def Spell(message):
 @bot.message_handler(content_types=['sticker'])
 def Stick_Command(message):
   Send(Uid(message),StkIdBack(message))
-  
+
+def CloseLairWay():
+  SQLAgain()
+  TBAgain()
+  LWLS()
+  StartLairWay(bot)
+
+atexit.register(CloseLairWay)
 LWLS()
 StartLairWay(bot)
+
+

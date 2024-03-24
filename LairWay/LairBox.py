@@ -1,11 +1,18 @@
 import sqlite3
 
-LairBoxV="DB-SQL-1.0"
 
+LairBoxV="DB-SQL-1.0"
 conn = sqlite3.connect('LW.db', check_same_thread=False)
 cur = conn.cursor()
 cur.execute('''CREATE TABLE IF NOT EXISTS box (id, box, key, skey, mod )''')
 cur.execute('''CREATE TABLE IF NOT EXISTS UsInf (id, name, rname, role, Blockid, fotoid )''')
+
+
+def SQLAgain():
+    global conn, cur
+    conn.close()
+    conn = sqlite3.connect('LW.db', check_same_thread=False)
+    cur = conn.cursor()
 
 
 
@@ -84,10 +91,10 @@ import sqlite3
 def Box(uid: int,boxname:str)-> int: '''Return value of box.'''; return cur.execute("SELECT key FROM box WHERE (id, box) = (?, ?)",(uid, boxname)).fetchall()[0][0]
 def Boxs(box:str) -> list[tuple[int]]: cur.execute("SELECT key FROM box WHERE box = (?)",(box)).fetchall()
   
-def NewBox(uid: int, box: str ,key: int ): '''box = key'''; cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(key,uid,box))
-def AddBox(uid: int, box: str ,key: int ): '''box = box+key''';  cur.execute("UPDATE box SET key = key+? WHERE (id,box) = (?,?)",(key,uid,box))
-def SubBox(uid: int, box: str ,key: int ): '''box = box-key''';  cur.execute("UPDATE box SET key = key-? WHERE (id,box) = (?,?)",(key,uid,box))
-def MulBox(uid: int, box: str ,key: int ): '''box = box*key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)*key,uid,box))
+def NewBox(uid: int, box: str ,key: int ): '''box = key'''; cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(key,uid,box)); conn.commit()
+def AddBox(uid: int, box: str ,key: int ): '''box = box+key''';  cur.execute("UPDATE box SET key = key+? WHERE (id,box) = (?,?)",(key,uid,box));conn.commit()
+def SubBox(uid: int, box: str ,key: int ): '''box = box-key''';  cur.execute("UPDATE box SET key = key-? WHERE (id,box) = (?,?)",(key,uid,box));conn.commit()
+def MulBox(uid: int, box: str ,key: int ): '''box = box*key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)*key,uid,box));
 def PowBox(uid: int, box: str ,key: int ): '''box = box**key''';cur.execute("UPDATE box SET key = ? WHERE (id,box) = (?,?)",(Box(uid,box)**key,uid,box))
 def DivBox(uid: int, box: str ,key: int ):
   '''box = box//key'''

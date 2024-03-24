@@ -2,11 +2,21 @@ import telebot
 import os
 
 token = os.environ['token']
+
+def TBAgain():
+    global bot 
+    bot.stop_polling()
+    token = os.environ['token']
+    bot = telebot.TeleBot(token)
+    
+    
+
 bot = telebot.TeleBot(token) 
 
 LairFaceV="TeleBot-1.0"
 biglim=4096
 btlim=64
+ 
 
 def Send(uid:str,text:str,kb: telebot.types.ReplyKeyboardMarkup =None) -> telebot.types.Message: return bot.send_message(uid, text=text, reply_markup=kb)
 def Kill(cid: int,mid: int): bot.delete_message(cid,mid)
