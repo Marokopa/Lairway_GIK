@@ -1,0 +1,13 @@
+{
+ "games": ["GameGIK"],
+ "lord" : ["pavel_maroko","Redstone_Catman", "YumarST"],
+  "herceg" : [],
+  "wanderer": [],
+  "bot":"5094636386:AAEmffF2FhQjeJmp3fSBMgUsh1_PyaYqJ_8",
+  "GitHub":"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",
+  "path": "Marokopa/Lairway_GIK",    
+  "env": false,
+  "LWLS": true,
+  "IP": "0.0.0.0",
+  "SleepySave": true
+}
